@@ -248,9 +248,7 @@ export default function Home() {
     <main className="min-h-screen bg-zinc-950 p-8 text-white">
       <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-5xl font-black text-red-500">
-  Flex Master Tracker TEST 123
-</h1>
+          <h1 className="text-5xl font-black">Flex Master Tracker</h1>
           <p className="mt-2 text-zinc-400">
             Ladder, awards og beviser på hvem der faktisk bærer flex-drømmen.
           </p>
