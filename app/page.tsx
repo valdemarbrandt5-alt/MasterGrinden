@@ -329,12 +329,12 @@ export default function Home() {
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
-            <table className="w-full min-w-[1400px] text-left">
+            <table className="w-full min-w-[1200px] text-left text-sm">
               <thead className="bg-zinc-900 text-zinc-300">
                 <tr>
-                  <th className="p-4">#</th>
-                  <th className="p-4">Spiller</th>
-                  <th className="p-4">Role</th>
+                  <th className="px-3 py-3">#</th>
+                  <th className="px-3 py-3">Spiller</th>
+                  <th className="px-3 py-3">Role</th>
 
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
@@ -444,7 +444,7 @@ export default function Home() {
                   >
                     <td className="p-4 text-xl font-bold">{index + 1}</td>
 
-                    <td className="p-4">
+                    <td className="px-3 py-3">
                       <div className="text-lg font-bold">{p.name}</div>
                       <div className="text-sm text-zinc-500">
                         {p.gameName}#{p.tagLine}
@@ -456,13 +456,13 @@ export default function Home() {
                       )}
                     </td>
 
-                    <td className="p-4">
+                    <td className="px-3 py-3">
                       <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-sm">
                         {p.mainRole} / {p.secondRole}
                       </span>
                     </td>
 
-                    <td className="p-4">
+                    <td className="px-3 py-3">
                       <div className="flex items-center gap-3">
                         {rankIcon(p.tier) && (
                           <img
@@ -482,7 +482,7 @@ export default function Home() {
                       </div>
                     </td>
 
-                    <td className="p-4">
+                    <td className="px-3 py-3">
                       {p.wins}W / {p.losses}L
                     </td>
 
@@ -496,7 +496,7 @@ export default function Home() {
                       {p.winrate}%
                     </td>
 
-                    <td className="p-4">{p.trackedGames}</td>
+                    <td className="px-3 py-3">{p.trackedGames}</td>
 
                     <td className="p-4 font-bold text-purple-400">
                       {p.overallScore ?? 0}
