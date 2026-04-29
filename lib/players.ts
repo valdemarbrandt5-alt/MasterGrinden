@@ -1,0 +1,51 @@
+export const players = [
+  {
+    name: "Valdemar",
+    gameName: "Brandtenz",
+    tagLine: "3700",
+    mainRole: "ADC",
+    secondRole: "MID",
+  },
+  {
+    name: "Mads",
+    gameName: "Raller0987",
+    tagLine: "3535",
+    mainRole: "MID",
+    secondRole: "ADC",
+  },
+  {
+    name: "Ivan",
+    gameName: "Sylwester35",
+    tagLine: "3535",
+    mainRole: "TOP",
+    secondRole: "MID",
+  },
+  {
+    name: "David",
+    gameName: "doxxu",
+    tagLine: "035",
+    mainRole: "JNGL",
+    secondRole: "MID",
+  },
+  {
+    name: "Martin",
+    gameName: "Machi",
+    tagLine: "9282",
+    mainRole: "SUPP",
+    secondRole: "TOP",
+  },
+  {
+    name: "Lasse",
+    gameName: "LarsFrisk",
+    tagLine: "EUW",
+    mainRole: "MID",
+    secondRole: "JNGL",
+  },
+  {
+    name: "Erik",
+    gameName: "ERYC",
+    tagLine: "EUW",
+    mainRole: "MID",
+    secondRole: "ADC",
+  },
+];
