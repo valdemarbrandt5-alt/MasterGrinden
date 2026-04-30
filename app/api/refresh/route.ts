@@ -6,6 +6,9 @@ import { getCachedMatch, getAllCachedMatches } from "@/lib/matchCache";
 import { acquireRefreshLock, releaseRefreshLock } from "@/lib/refreshLock";
 import { TRACKING_START_TIME } from "@/lib/trackerSettings";
 
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
 function rankValue(tier: string, rank: string, lp: number) {
   const tiers: Record<string, number> = {
     CHALLENGER: 10000,
@@ -35,47 +38,74 @@ export async function POST() {
 
   if (!hasLock) {
     return NextResponse.json(
-      { error: "Refresh is already running. Try again in a few minutes." },
+      {
+        error: "Refresh is already running. Try again in a few minutes.",
+      },
       { status: 409 }
     );
   }
 
+  const refreshReport = {
+    playersChecked: 0,
+    matchIdsScanned: 0,
+    matchesCachedOrFound: 0,
+    matchErrors: 0,
+    playerErrors: 0,
+  };
+
   try {
-    const data = [];
+    const playerAccounts = [];
 
     for (const player of players) {
       try {
-        const account = await getAccount(player.gameName, player.tagLine);
-        const matchIds = await getFlexMatchIds(account.puuid, 5);
+        refreshReport.playersChecked++;
 
-        for (const id of matchIds) {
+        const account = await getAccount(player.gameName, player.tagLine);
+
+        playerAccounts.push({
+          player,
+          account,
+        });
+
+        const matchIds = await getFlexMatchIds(account.puuid);
+
+        refreshReport.matchIdsScanned += matchIds.length;
+
+        for (const matchId of matchIds) {
           try {
-            await getCachedMatch(id);
-          } catch {
-            // skip failed match
+            await getCachedMatch(matchId);
+            refreshReport.matchesCachedOrFound++;
+          } catch (error: any) {
+            refreshReport.matchErrors++;
+            console.log(
+              `Failed caching match ${matchId} for ${player.gameName}:`,
+              error.message
+            );
           }
         }
-      } catch {
-        // skip cache warmup failure for this player
+      } catch (error: any) {
+        refreshReport.playerErrors++;
+        console.log(`Refresh warmup failed for ${player.gameName}:`, error.message);
       }
     }
 
     const allMatches = await getAllCachedMatches();
+    const data = [];
 
-    for (const player of players) {
+    for (const { player, account } of playerAccounts) {
       try {
-        const account = await getAccount(player.gameName, player.tagLine);
         const ranks = await getRankByPuuid(account.puuid);
 
         const flexRank = ranks.find(
           (r: any) => r.queueType === "RANKED_FLEX_SR"
         );
 
-        const trackedMatches = allMatches.filter((m: any) => {
-          const isAfterReset =
-            Math.floor(m.info.gameCreation / 1000) >= TRACKING_START_TIME;
+        const trackedMatches = allMatches.filter((match: any) => {
+          const gameCreationSeconds = Math.floor(match.info.gameCreation / 1000);
 
-          const hasPlayer = m.info.participants.some(
+          const isAfterReset = gameCreationSeconds >= TRACKING_START_TIME;
+
+          const hasPlayer = match.info.participants.some(
             (p: any) => p.puuid === account.puuid
           );
 
@@ -164,15 +194,20 @@ export async function POST() {
               (p: any) => p.puuid === account.puuid
             );
 
-            if (!playerStats) return null;
+            if (!playerStats) {
+              return null;
+            }
 
             const gameMinutes = match.info.gameDuration / 60;
+
             const matchCs =
-              playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+              playerStats.totalMinionsKilled +
+              playerStats.neutralMinionsKilled;
 
             const matchKda =
               playerStats.deaths > 0
-                ? (playerStats.kills + playerStats.assists) / playerStats.deaths
+                ? (playerStats.kills + playerStats.assists) /
+                  playerStats.deaths
                 : playerStats.kills + playerStats.assists;
 
             const matchScore =
@@ -192,7 +227,9 @@ export async function POST() {
               assists: playerStats.assists,
               damage: playerStats.totalDamageDealtToChampions,
               csMin:
-                gameMinutes > 0 ? Number((matchCs / gameMinutes).toFixed(1)) : 0,
+                gameMinutes > 0
+                  ? Number((matchCs / gameMinutes).toFixed(1))
+                  : 0,
               matchScore: Number(matchScore.toFixed(1)),
               timestamp:
                 match.info.gameEndTimestamp ??
@@ -269,7 +306,11 @@ export async function POST() {
 
     await saveLeaderboard(data);
 
-    return NextResponse.json(data);
+    return NextResponse.json({
+      ok: true,
+      report: refreshReport,
+      leaderboard: data,
+    });
   } finally {
     await releaseRefreshLock();
   }
