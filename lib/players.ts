@@ -3,6 +3,11 @@ export const players = [
     name: "Valdemar",
     gameName: "Brandtenz",
     tagLine: "3700",
+
+    // stats hentes fra alt
+    statGameName: "Ivan Er Chopped",
+    statTagLine: "2300",
+
     mainRole: "ADC",
     secondRole: "MID",
   },

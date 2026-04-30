@@ -80,7 +80,10 @@ export async function POST() {
 
     for (const player of players) {
       try {
-        const account = await getAccount(player.gameName, player.tagLine);
+        const statGameName = player.statGameName ?? player.gameName;
+        const statTagLine = player.statTagLine ?? player.tagLine;
+
+        const account = await getAccount(statGameName, statTagLine);
         const matchIds = await getFlexMatchIds(account.puuid, 1);
 
         for (const id of matchIds) {
@@ -101,7 +104,10 @@ export async function POST() {
       const oldPlayer = findOldPlayer(oldLeaderboard, player);
 
       try {
-        const account = await getAccount(player.gameName, player.tagLine);
+        const statGameName = player.statGameName ?? player.gameName;
+        const statTagLine = player.statTagLine ?? player.tagLine;
+
+        const account = await getAccount(statGameName, statTagLine);
 
         let flexRank: any = null;
         let rankFetchError: string | null = null;
