@@ -6,9 +6,6 @@ import { getCachedMatch, getAllCachedMatches } from "@/lib/matchCache";
 import { acquireRefreshLock, releaseRefreshLock } from "@/lib/refreshLock";
 import { TRACKING_START_TIME } from "@/lib/trackerSettings";
 
-export const dynamic = "force-dynamic";
-export const maxDuration = 60;
-
 function rankValue(tier: string, rank: string, lp: number) {
   const tiers: Record<string, number> = {
     CHALLENGER: 10000,
@@ -33,6 +30,32 @@ function rankValue(tier: string, rank: string, lp: number) {
   return (tiers[tier] ?? 0) + (ranks[rank] ?? 0) + lp;
 }
 
+function getMatchTimestamp(match: any) {
+  return (
+    match.info.gameEndTimestamp ??
+    match.info.gameStartTimestamp ??
+    match.info.gameCreation
+  );
+}
+
+function buildMatchScore(playerStats: any, gameMinutes: number, matchCs: number) {
+  const matchKda =
+    playerStats.deaths > 0
+      ? (playerStats.kills + playerStats.assists) / playerStats.deaths
+      : playerStats.kills + playerStats.assists;
+
+  const matchScore =
+    (playerStats.win ? 75 : 0) +
+    matchKda * 12 +
+    playerStats.totalDamageDealtToChampions / 350 +
+    playerStats.kills * 5 +
+    (gameMinutes > 0 ? (matchCs / gameMinutes) * 3 : 0) +
+    playerStats.visionScore * 1.5 -
+    playerStats.deaths * 8;
+
+  return Number(matchScore.toFixed(1));
+}
+
 export async function POST() {
   const hasLock = await acquireRefreshLock();
 
@@ -44,60 +67,40 @@ export async function POST() {
   }
 
   try {
-    const playerAccounts: any[] = [];
+    const data = [];
 
     for (const player of players) {
       try {
-        console.log(`Checking player: ${player.gameName}`);
-
         const account = await getAccount(player.gameName, player.tagLine);
 
-        playerAccounts.push({
-          player,
-          account,
-        });
+        // VIGTIGT: scanner kun 1 nyeste flex game pr spiller
+        const matchIds = await getFlexMatchIds(account.puuid, 1);
 
-        const matchIds = await getFlexMatchIds(account.puuid);
-
-        console.log(`${player.gameName}: scanned ${matchIds.length} match IDs`);
-
-        for (const matchId of matchIds) {
+        for (const id of matchIds) {
           try {
-            await getCachedMatch(matchId);
-            console.log(`Cached/found match: ${matchId}`);
+            await getCachedMatch(id);
           } catch (error: any) {
-            console.log(
-              `Failed caching match ${matchId} for ${player.gameName}:`,
-              error.message
-            );
+            console.log("MATCH CACHE ERROR:", id, error.message);
           }
         }
       } catch (error: any) {
-        console.log(`Player scan failed for ${player.gameName}:`, error.message);
+        console.log("CACHE WARMUP PLAYER ERROR:", player.name, error.message);
       }
     }
 
     const allMatches = await getAllCachedMatches();
-    const data = [];
 
-    for (const { player, account } of playerAccounts) {
+    for (const player of players) {
       try {
-        let flexRank: any = null;
+        const account = await getAccount(player.gameName, player.tagLine);
+        const ranks = await getRankByPuuid(account.puuid);
 
-        try {
-          const ranks = await getRankByPuuid(account.puuid);
-
-          flexRank = ranks.find(
-            (r: any) => r.queueType === "RANKED_FLEX_SR"
-          );
-        } catch (error: any) {
-          console.log(`Rank fetch failed for ${player.gameName}:`, error.message);
-        }
+        const flexRank = ranks.find(
+          (r: any) => r.queueType === "RANKED_FLEX_SR"
+        );
 
         const trackedMatches = allMatches.filter((match: any) => {
-          if (!match?.info?.participants) {
-            return false;
-          }
+          if (!match?.info?.participants) return false;
 
           const isAfterReset =
             Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
@@ -153,8 +156,8 @@ export async function POST() {
           0
         );
 
-        const minutes = performances.reduce(
-          (sum: number, p: any) => sum + ((p.timePlayed ?? 0) / 60),
+        const minutes = trackedMatches.reduce(
+          (sum: number, match: any) => sum + match.info.gameDuration / 60,
           0
         );
 
@@ -180,44 +183,18 @@ export async function POST() {
           games > 0 ? Math.max(...performances.map((p: any) => p.deaths)) : 0;
 
         const recentMatches = trackedMatches
-          .sort(
-            (a: any, b: any) =>
-              (b.info.gameEndTimestamp ?? b.info.gameCreation) -
-              (a.info.gameEndTimestamp ?? a.info.gameCreation)
-          )
+          .sort((a: any, b: any) => getMatchTimestamp(b) - getMatchTimestamp(a))
           .slice(0, 5)
           .map((match: any) => {
             const playerStats = match.info.participants.find(
               (p: any) => p.puuid === account.puuid
             );
 
-            if (!playerStats) {
-              return null;
-            }
+            if (!playerStats) return null;
 
-            const gameMinutes =
-              playerStats.timePlayed > 0
-                ? playerStats.timePlayed / 60
-                : match.info.gameDuration / 60;
-
+            const gameMinutes = match.info.gameDuration / 60;
             const matchCs =
-              playerStats.totalMinionsKilled +
-              playerStats.neutralMinionsKilled;
-
-            const matchKda =
-              playerStats.deaths > 0
-                ? (playerStats.kills + playerStats.assists) /
-                  playerStats.deaths
-                : playerStats.kills + playerStats.assists;
-
-            const matchScore =
-              (playerStats.win ? 75 : 0) +
-              matchKda * 12 +
-              playerStats.totalDamageDealtToChampions / 350 +
-              playerStats.kills * 5 +
-              (gameMinutes > 0 ? (matchCs / gameMinutes) * 3 : 0) +
-              playerStats.visionScore * 1.5 -
-              playerStats.deaths * 8;
+              playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
 
             return {
               win: playerStats.win,
@@ -230,11 +207,8 @@ export async function POST() {
                 gameMinutes > 0
                   ? Number((matchCs / gameMinutes).toFixed(1))
                   : 0,
-              matchScore: Number(matchScore.toFixed(1)),
-              timestamp:
-                match.info.gameEndTimestamp ??
-                match.info.gameStartTimestamp ??
-                match.info.gameCreation,
+              matchScore: buildMatchScore(playerStats, gameMinutes, matchCs),
+              timestamp: getMatchTimestamp(match),
             };
           })
           .filter(Boolean);
