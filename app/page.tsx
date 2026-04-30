@@ -8,12 +8,12 @@ function rankColor(tier: string) {
     GRANDMASTER: "text-red-400 border-red-400/40 bg-red-400/10",
     MASTER: "text-purple-400 border-purple-400/40 bg-purple-400/10",
     DIAMOND: "text-cyan-300 border-cyan-300/40 bg-cyan-300/10",
-    EMERALD: "text-emerald-400 border-emerald-400/40 bg-emerald-400/10",
+    EMERALD: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
     PLATINUM: "text-teal-300 border-teal-300/40 bg-teal-300/10",
     GOLD: "text-yellow-400 border-yellow-400/40 bg-yellow-400/10",
     SILVER: "text-zinc-300 border-zinc-300/40 bg-zinc-300/10",
     BRONZE: "text-orange-500 border-orange-500/40 bg-orange-500/10",
-    IRON: "text-stone-400 border-stone-400/40 bg-stone-400/10",
+    IRON: "text-stone-400 border-stone-400/10 bg-stone-400/10",
     UNRANKED: "text-zinc-500 border-zinc-500/40 bg-zinc-500/10",
     ERROR: "text-red-500 border-red-500/40 bg-red-500/10",
   };
@@ -105,9 +105,17 @@ export default function Home() {
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [openPlayers, setOpenPlayers] = useState<Record<string, boolean>>({});
 
   const [sortKey, setSortKey] = useState("score");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  function togglePlayer(name: string) {
+    setOpenPlayers((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  }
 
   async function loadData() {
     try {
@@ -141,7 +149,7 @@ export default function Home() {
       const data = await res.json();
 
       if (!res.ok) {
-        setMessage("Refresh fejlede.");
+        setMessage(data?.error ?? "Refresh fejlede.");
         return;
       }
 
@@ -159,8 +167,6 @@ export default function Home() {
   }
 
   function handleSort(key: string) {
-    console.log("Sorting by:", key);
-
     setSortKey((currentKey) => {
       if (currentKey === key) {
         setSortDirection((currentDirection) =>
@@ -284,42 +290,36 @@ export default function Home() {
               value={`${overallBest?.overallScore ?? 0} score`}
               tone="purple"
             />
-
             <AwardCard
               title="Top damage"
               player={topDamage}
               value={`${(topDamage?.avgDamage ?? 0).toLocaleString()} dmg/game`}
               tone="green"
             />
-
             <AwardCard
               title="Bedste winrate"
               player={topWinrate}
               value={`${topWinrate?.winrate ?? 0}%`}
               tone="green"
             />
-
             <AwardCard
               title="Bedste KDA"
               player={topKda}
               value={topKda?.kda ?? 0}
               tone="blue"
             />
-
             <AwardCard
               title="Flest kills i ét game"
               player={topKillsGame}
               value={`${topKillsGame?.topKillsGame ?? 0} kills`}
               tone="yellow"
             />
-
             <AwardCard
               title="Flest døde i ét game"
               player={topDeathsGame}
               value={`${topDeathsGame?.topDeathsGame ?? 0} deaths`}
               tone="red"
             />
-
             <AwardCard
               title="Flest døde pr. game"
               player={topDeathsPerGame}
@@ -335,98 +335,84 @@ export default function Home() {
                   <th className="px-3 py-3">#</th>
                   <th className="px-3 py-3">Spiller</th>
                   <th className="px-3 py-3">Role</th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("score")}
                   >
                     Flex Rank {sortArrow("score")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("wins")}
                   >
                     Tracked W/L {sortArrow("wins")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("winrate")}
                   >
                     Tracked WR {sortArrow("winrate")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("trackedGames")}
                   >
                     Games {sortArrow("trackedGames")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("overallScore")}
                   >
                     Overall {sortArrow("overallScore")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("kda")}
                   >
                     KDA {sortArrow("kda")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgKills")}
                   >
                     Avg kills {sortArrow("avgKills")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgDeaths")}
                   >
                     Avg deaths {sortArrow("avgDeaths")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgAssists")}
                   >
                     Avg assists {sortArrow("avgAssists")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("topKillsGame")}
                   >
                     Top kills {sortArrow("topKillsGame")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("topDeathsGame")}
                   >
                     Top deaths {sortArrow("topDeathsGame")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgDamage")}
                   >
                     Damage {sortArrow("avgDamage")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgCsMin")}
                   >
                     CS/min {sortArrow("avgCsMin")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgVision")}
@@ -449,11 +435,6 @@ export default function Home() {
                       <div className="text-sm text-zinc-500">
                         {p.gameName}#{p.tagLine}
                       </div>
-                      {p.error && (
-                        <div className="mt-1 text-xs text-red-400">
-                          {p.error}
-                        </div>
-                      )}
                     </td>
 
                     <td className="px-3 py-3">
@@ -572,71 +553,74 @@ export default function Home() {
                 key={`recent-${p.name}-${p.gameName}`}
                 className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
               >
-                <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+                <div
+                  onClick={() => togglePlayer(p.name)}
+                  className="flex cursor-pointer flex-col gap-1 md:flex-row md:items-end md:justify-between"
+                >
                   <div>
                     <h2 className="text-2xl font-bold">{p.name}</h2>
-                    <p className="text-sm text-zinc-500">
-                      Seneste tracked games
-                    </p>
+                    <p className="text-sm text-zinc-500">Seneste tracked games</p>
                   </div>
 
                   <div className="text-sm text-zinc-500">
-                    {p.recentMatches?.length ?? 0} games vist
+                    {openPlayers[p.name] ? "Skjul" : "Vis"} ·{" "}
+                    {p.recentMatches?.length ?? 0} games
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  {p.recentMatches?.length > 0 ? (
-                    p.recentMatches.map((match: any, i: number) => (
-                      <div
-                        key={`${p.name}-match-${i}`}
-                        className="flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 md:flex-row md:items-center md:justify-between"
-                      >
-                        <div className="flex items-center gap-4">
-                          <span
-                            className={`rounded-lg px-3 py-1 text-sm font-bold ${
-                              match.win
-                                ? "bg-emerald-500/15 text-emerald-400"
-                                : "bg-red-500/15 text-red-400"
-                            }`}
-                          >
-                            {match.win ? "WIN" : "LOSS"}
-                          </span>
+                {openPlayers[p.name] && (
+                  <div className="mt-4 space-y-2">
+                    {p.recentMatches?.length > 0 ? (
+                      p.recentMatches.map((match: any, i: number) => (
+                        <div
+                          key={`${p.name}-match-${i}`}
+                          className="flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 md:flex-row md:items-center md:justify-between"
+                        >
+                          <div className="flex items-center gap-4">
+                            <span
+                              className={`rounded-lg px-3 py-1 text-sm font-bold ${
+                                match.win
+                                  ? "bg-emerald-500/15 text-emerald-400"
+                                  : "bg-red-500/15 text-red-400"
+                              }`}
+                            >
+                              {match.win ? "WIN" : "LOSS"}
+                            </span>
 
-                          <div>
-                            <div className="font-semibold">
-                              {match.champion}
+                            <div>
+                              <div className="font-semibold">{match.champion}</div>
+                              <div className="text-sm text-zinc-500">
+                                {match.kills}/{match.deaths}/{match.assists}
+                              </div>
                             </div>
-                            <div className="text-sm text-zinc-500">
-                              {match.kills}/{match.deaths}/{match.assists}
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-4 text-sm md:gap-6">
+                            <div className="font-bold text-purple-400">
+                              {match.matchScore ?? 0} pts
+                            </div>
+
+                            <div className="text-zinc-300">
+                              {(match.damage ?? 0).toLocaleString()} dmg
+                            </div>
+
+                            <div className="text-zinc-300">
+                              {match.csMin} CS/min
+                            </div>
+
+                            <div className="text-zinc-500">
+                              {formatDate(match.timestamp)}
                             </div>
                           </div>
                         </div>
-                        <div className="font-bold text-purple-400">
-  {match.matchScore ?? 0} pts
-</div>
-
-                        <div className="flex flex-wrap items-center gap-4 text-sm md:gap-6">
-                          <div className="text-zinc-300">
-                            {(match.damage ?? 0).toLocaleString()} dmg
-                          </div>
-
-                          <div className="text-zinc-300">
-                            {match.csMin} CS/min
-                          </div>
-
-                          <div className="text-zinc-500">
-                            {formatDate(match.timestamp)}
-                          </div>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-500">
+                        Ingen tracked games endnu.
                       </div>
-                    ))
-                  ) : (
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-500">
-                      Ingen tracked games endnu.
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
