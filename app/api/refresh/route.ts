@@ -38,27 +38,17 @@ export async function POST() {
 
   if (!hasLock) {
     return NextResponse.json(
-      {
-        error: "Refresh is already running. Try again in a few minutes.",
-      },
+      { error: "Refresh is already running. Try again in a few minutes." },
       { status: 409 }
     );
   }
 
-  const refreshReport = {
-    playersChecked: 0,
-    matchIdsScanned: 0,
-    matchesCachedOrFound: 0,
-    matchErrors: 0,
-    playerErrors: 0,
-  };
-
   try {
-    const playerAccounts = [];
+    const playerAccounts: any[] = [];
 
     for (const player of players) {
       try {
-        refreshReport.playersChecked++;
+        console.log(`Checking player: ${player.gameName}`);
 
         const account = await getAccount(player.gameName, player.tagLine);
 
@@ -69,14 +59,13 @@ export async function POST() {
 
         const matchIds = await getFlexMatchIds(account.puuid);
 
-        refreshReport.matchIdsScanned += matchIds.length;
+        console.log(`${player.gameName}: scanned ${matchIds.length} match IDs`);
 
         for (const matchId of matchIds) {
           try {
             await getCachedMatch(matchId);
-            refreshReport.matchesCachedOrFound++;
+            console.log(`Cached/found match: ${matchId}`);
           } catch (error: any) {
-            refreshReport.matchErrors++;
             console.log(
               `Failed caching match ${matchId} for ${player.gameName}:`,
               error.message
@@ -84,8 +73,7 @@ export async function POST() {
           }
         }
       } catch (error: any) {
-        refreshReport.playerErrors++;
-        console.log(`Refresh warmup failed for ${player.gameName}:`, error.message);
+        console.log(`Player scan failed for ${player.gameName}:`, error.message);
       }
     }
 
@@ -94,16 +82,25 @@ export async function POST() {
 
     for (const { player, account } of playerAccounts) {
       try {
-        const ranks = await getRankByPuuid(account.puuid);
+        let flexRank: any = null;
 
-        const flexRank = ranks.find(
-          (r: any) => r.queueType === "RANKED_FLEX_SR"
-        );
+        try {
+          const ranks = await getRankByPuuid(account.puuid);
+
+          flexRank = ranks.find(
+            (r: any) => r.queueType === "RANKED_FLEX_SR"
+          );
+        } catch (error: any) {
+          console.log(`Rank fetch failed for ${player.gameName}:`, error.message);
+        }
 
         const trackedMatches = allMatches.filter((match: any) => {
-          const gameCreationSeconds = Math.floor(match.info.gameCreation / 1000);
+          if (!match?.info?.participants) {
+            return false;
+          }
 
-          const isAfterReset = gameCreationSeconds >= TRACKING_START_TIME;
+          const isAfterReset =
+            Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
 
           const hasPlayer = match.info.participants.some(
             (p: any) => p.puuid === account.puuid
@@ -156,8 +153,8 @@ export async function POST() {
           0
         );
 
-        const minutes = trackedMatches.reduce(
-          (sum: number, m: any) => sum + m.info.gameDuration / 60,
+        const minutes = performances.reduce(
+          (sum: number, p: any) => sum + ((p.timePlayed ?? 0) / 60),
           0
         );
 
@@ -198,7 +195,10 @@ export async function POST() {
               return null;
             }
 
-            const gameMinutes = match.info.gameDuration / 60;
+            const gameMinutes =
+              playerStats.timePlayed > 0
+                ? playerStats.timePlayed / 60
+                : match.info.gameDuration / 60;
 
             const matchCs =
               playerStats.totalMinionsKilled +
@@ -306,11 +306,7 @@ export async function POST() {
 
     await saveLeaderboard(data);
 
-    return NextResponse.json({
-      ok: true,
-      report: refreshReport,
-      leaderboard: data,
-    });
+    return NextResponse.json(data);
   } finally {
     await releaseRefreshLock();
   }

@@ -56,14 +56,16 @@ export async function riotFetch(url: string, retries = 6): Promise<any> {
 
     if (!retryable || attempt > retries) {
       const text = await res.text().catch(() => "");
+
       console.log("RIOT ERROR:", res.status, text);
       console.log("FAILED URL:", url);
+
       throw new Error(`Riot API error: ${res.status}`);
     }
 
     const retryAfterMs = getRetryAfterMs(res);
     const backoffMs =
-      retryAfterMs ?? Math.min(60000, 4000 * Math.pow(2, attempt - 1));
+      retryAfterMs ?? Math.min(60000, 5000 * Math.pow(2, attempt - 1));
 
     console.log(
       `Riot unstable. Status ${res.status}. Retry ${attempt}/${retries}. Waiting ${
@@ -84,7 +86,7 @@ export async function getAccount(gameName: string, tagLine: string) {
 }
 
 export async function getRankByPuuid(puuid: string) {
-  return riotFetch(`${EUW}/lol/league/v4/entries/by-puuid/${puuid}`);
+  return riotFetch(`${EUW}/lol/league/v4/entries/by-puuid/${puuid}`, 2);
 }
 
 export async function getFlexMatchIds(
