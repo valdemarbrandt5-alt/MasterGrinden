@@ -612,6 +612,9 @@ export default function Home() {
                             </div>
                           </div>
                         </div>
+                        <div className="font-bold text-purple-400">
+  {match.matchScore ?? 0} pts
+</div>
 
                         <div className="flex flex-wrap items-center gap-4 text-sm md:gap-6">
                           <div className="text-zinc-300">

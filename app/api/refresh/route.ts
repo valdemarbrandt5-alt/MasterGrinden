@@ -149,21 +149,33 @@ export async function POST() {
           const gameMinutes = match.info.gameDuration / 60;
           const matchCs =
             playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+const matchKda =
+  playerStats.deaths > 0
+    ? (playerStats.kills + playerStats.assists) / playerStats.deaths
+    : playerStats.kills + playerStats.assists;
 
+const matchScore =
+  (playerStats.win ? 75 : 0) +
+  matchKda * 12 +
+  playerStats.totalDamageDealtToChampions / 350 +
+  playerStats.kills * 5 +
+  (gameMinutes > 0 ? (matchCs / gameMinutes) * 3 : 0) +
+  playerStats.visionScore * 1.5 -
+  playerStats.deaths * 8;
           return {
-            win: playerStats.win,
-            champion: playerStats.championName,
-            kills: playerStats.kills,
-            deaths: playerStats.deaths,
-            assists: playerStats.assists,
-            damage: playerStats.totalDamageDealtToChampions,
-            csMin:
-              gameMinutes > 0 ? Number((matchCs / gameMinutes).toFixed(1)) : 0,
-            timestamp:
-              match.info.gameEndTimestamp ??
-              match.info.gameStartTimestamp ??
-              match.info.gameCreation,
-          };
+  win: playerStats.win,
+  champion: playerStats.championName,
+  kills: playerStats.kills,
+  deaths: playerStats.deaths,
+  assists: playerStats.assists,
+  damage: playerStats.totalDamageDealtToChampions,
+  csMin: gameMinutes > 0 ? Number((matchCs / gameMinutes).toFixed(1)) : 0,
+  matchScore: Number(matchScore.toFixed(1)),
+  timestamp:
+    match.info.gameEndTimestamp ??
+    match.info.gameStartTimestamp ??
+    match.info.gameCreation,
+};
         })
         .filter(Boolean);
 
