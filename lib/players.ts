@@ -18,7 +18,7 @@ export const players = [
     gameName: "Sylwester35",
     tagLine: "3535",
     mainRole: "TOP",
-    secondRole: "MID",
+    secondRole: "JNGL",
   },
   {
     name: "David",
