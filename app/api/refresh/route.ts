@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { players } from "@/lib/players";
-import { saveLeaderboard } from "@/lib/cache";
+import { readLeaderboard, saveLeaderboard } from "@/lib/cache";
 import { getAccount, getRankByPuuid, getFlexMatchIds } from "@/lib/riot";
 import { getCachedMatch, getAllCachedMatches } from "@/lib/matchCache";
 import { acquireRefreshLock, releaseRefreshLock } from "@/lib/refreshLock";
@@ -56,6 +56,14 @@ function buildMatchScore(playerStats: any, gameMinutes: number, matchCs: number)
   return Number(matchScore.toFixed(1));
 }
 
+function findOldPlayer(oldLeaderboard: any[], player: any) {
+  return oldLeaderboard.find(
+    (p: any) =>
+      p.name === player.name ||
+      (p.gameName === player.gameName && p.tagLine === player.tagLine)
+  );
+}
+
 export async function POST() {
   const hasLock = await acquireRefreshLock();
 
@@ -67,13 +75,12 @@ export async function POST() {
   }
 
   try {
+    const oldLeaderboard = await readLeaderboard();
     const data = [];
 
     for (const player of players) {
       try {
         const account = await getAccount(player.gameName, player.tagLine);
-
-        // VIGTIGT: scanner kun 1 nyeste flex game pr spiller
         const matchIds = await getFlexMatchIds(account.puuid, 1);
 
         for (const id of matchIds) {
@@ -91,13 +98,29 @@ export async function POST() {
     const allMatches = await getAllCachedMatches();
 
     for (const player of players) {
+      const oldPlayer = findOldPlayer(oldLeaderboard, player);
+
       try {
         const account = await getAccount(player.gameName, player.tagLine);
-        const ranks = await getRankByPuuid(account.puuid);
 
-        const flexRank = ranks.find(
-          (r: any) => r.queueType === "RANKED_FLEX_SR"
-        );
+        let flexRank: any = null;
+        let rankFetchError: string | null = null;
+
+        try {
+          const ranks = await getRankByPuuid(account.puuid);
+          flexRank = ranks.find((r: any) => r.queueType === "RANKED_FLEX_SR");
+        } catch (error: any) {
+          rankFetchError = error.message;
+          console.log("RANK FETCH ERROR:", player.name, error.message);
+        }
+
+        const tier = flexRank?.tier ?? oldPlayer?.tier ?? "UNRANKED";
+        const rank = flexRank?.rank ?? oldPlayer?.rank ?? "";
+        const lp = flexRank?.leaguePoints ?? oldPlayer?.lp ?? 0;
+
+        const score = flexRank
+          ? rankValue(flexRank.tier, flexRank.rank, flexRank.leaguePoints)
+          : oldPlayer?.score ?? rankValue(tier, rank, lp);
 
         const trackedMatches = allMatches.filter((match: any) => {
           if (!match?.info?.participants) return false;
@@ -227,15 +250,13 @@ export async function POST() {
 
         data.push({
           ...player,
-          tier: flexRank?.tier ?? "UNRANKED",
-          rank: flexRank?.rank ?? "",
-          lp: flexRank?.leaguePoints ?? 0,
+          tier,
+          rank,
+          lp,
           wins: trackedWins,
           losses: trackedLosses,
           winrate: trackedWinrate,
-          score: flexRank
-            ? rankValue(flexRank.tier, flexRank.rank, flexRank.leaguePoints)
-            : 0,
+          score,
           trackedGames: games,
           recentMatches,
           kda,
@@ -248,31 +269,41 @@ export async function POST() {
           topKillsGame,
           topDeathsGame,
           overallScore,
+          error: rankFetchError
+            ? `Rank endpoint failed. Using last known rank.`
+            : undefined,
         });
       } catch (error: any) {
-        data.push({
-          ...player,
-          tier: "ERROR",
-          rank: "",
-          lp: 0,
-          wins: 0,
-          losses: 0,
-          winrate: 0,
-          score: 0,
-          trackedGames: 0,
-          recentMatches: [],
-          kda: 0,
-          avgKills: 0,
-          avgDeaths: 0,
-          avgAssists: 0,
-          avgDamage: 0,
-          avgCsMin: 0,
-          avgVision: 0,
-          topKillsGame: 0,
-          topDeathsGame: 0,
-          overallScore: 0,
-          error: error.message,
-        });
+        if (oldPlayer) {
+          data.push({
+            ...oldPlayer,
+            error: `Refresh failed. Using last known data.`,
+          });
+        } else {
+          data.push({
+            ...player,
+            tier: "UNRANKED",
+            rank: "",
+            lp: 0,
+            wins: 0,
+            losses: 0,
+            winrate: 0,
+            score: 0,
+            trackedGames: 0,
+            recentMatches: [],
+            kda: 0,
+            avgKills: 0,
+            avgDeaths: 0,
+            avgAssists: 0,
+            avgDamage: 0,
+            avgCsMin: 0,
+            avgVision: 0,
+            topKillsGame: 0,
+            topDeathsGame: 0,
+            overallScore: 0,
+            error: error.message,
+          });
+        }
       }
     }
 
