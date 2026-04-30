@@ -48,4 +48,11 @@ export const players = [
     mainRole: "MID",
     secondRole: "ADC",
   },
+  {
+    name: "Doodle",
+    gameName: "doodlev",
+    tagLine: "3535",
+    mainRole: "SUPP",
+    secondRole: "TOP",
+  },
 ];
