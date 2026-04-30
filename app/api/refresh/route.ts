@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { players } from "@/lib/players";
 import { saveLeaderboard } from "@/lib/cache";
-import { getAccount, getRankByPuuid, getFlexMatchIds, getMatch } from "@/lib/riot";
+import { getAccount, getRankByPuuid, getFlexMatchIds } from "@/lib/riot";
+import { getCachedMatch, getAllCachedMatches } from "@/lib/matchCache";
 import { TRACKING_START_TIME } from "@/lib/trackerSettings";
 
 function rankValue(tier: string, rank: string, lp: number) {
@@ -31,6 +32,28 @@ function rankValue(tier: string, rank: string, lp: number) {
 export async function POST() {
   const data = [];
 
+  // Step 1: Scan recent match IDs and cache only new matches
+  for (const player of players) {
+    try {
+      const account = await getAccount(player.gameName, player.tagLine);
+      const matchIds = await getFlexMatchIds(account.puuid, 20);
+
+      for (const id of matchIds) {
+        try {
+          await getCachedMatch(id);
+        } catch {
+          // skip failed match
+        }
+      }
+    } catch {
+      // skip cache warmup failure for this player
+    }
+  }
+
+  // Step 2: Pull all cached matches once
+  const allMatches = await getAllCachedMatches();
+
+  // Step 3: Build leaderboard from ALL cached tracked matches
   for (const player of players) {
     try {
       const account = await getAccount(player.gameName, player.tagLine);
@@ -40,22 +63,16 @@ export async function POST() {
         (r: any) => r.queueType === "RANKED_FLEX_SR"
       );
 
-      const matchIds = await getFlexMatchIds(account.puuid, 2);
-      const matches = [];
+      const trackedMatches = allMatches.filter((m: any) => {
+        const isAfterReset =
+          Math.floor(m.info.gameCreation / 1000) >= TRACKING_START_TIME;
 
-      for (const id of matchIds) {
-        try {
-          const match = await getMatch(id);
-          matches.push(match);
-        } catch {
-          // skip failed match
-        }
-      }
+        const hasPlayer = m.info.participants.some(
+          (p: any) => p.puuid === account.puuid
+        );
 
-      const trackedMatches = matches.filter(
-        (m: any) =>
-          Math.floor(m.info.gameCreation / 1000) >= TRACKING_START_TIME
-      );
+        return isAfterReset && hasPlayer;
+      });
 
       const performances = trackedMatches
         .map((match: any) =>
@@ -128,6 +145,11 @@ export async function POST() {
         games > 0 ? Math.max(...performances.map((p: any) => p.deaths)) : 0;
 
       const recentMatches = trackedMatches
+        .sort(
+          (a: any, b: any) =>
+            (b.info.gameEndTimestamp ?? b.info.gameCreation) -
+            (a.info.gameEndTimestamp ?? a.info.gameCreation)
+        )
         .slice(0, 5)
         .map((match: any) => {
           const playerStats = match.info.participants.find(
