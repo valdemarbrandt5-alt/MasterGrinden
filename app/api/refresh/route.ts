@@ -36,7 +36,7 @@ export async function POST() {
   for (const player of players) {
     try {
       const account = await getAccount(player.gameName, player.tagLine);
-      const matchIds = await getFlexMatchIds(account.puuid, 20);
+      const matchIds = await getFlexMatchIds(account.puuid, 2);
 
       for (const id of matchIds) {
         try {
