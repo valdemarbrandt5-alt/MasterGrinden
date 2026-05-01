@@ -189,7 +189,9 @@ export default function Home() {
     loadData();
   }, []);
 
-  const sortedPlayers = [...players].sort((a, b) => {
+  const activePlayers = players.filter((p) => Number(p.trackedGames ?? 0) > 0);
+
+  const sortedPlayers = [...activePlayers].sort((a, b) => {
     const av = Number(a[sortKey] ?? 0);
     const bv = Number(b[sortKey] ?? 0);
 
@@ -197,55 +199,55 @@ export default function Home() {
     return av - bv;
   });
 
-  const bestWinrate = players.length
-    ? Math.max(...players.map((p) => Number(p.winrate ?? 0)))
+  const bestWinrate = activePlayers.length
+    ? Math.max(...activePlayers.map((p) => Number(p.winrate ?? 0)))
     : 0;
 
-  const worstWinrate = players.length
-    ? Math.min(...players.map((p) => Number(p.winrate ?? 0)))
+  const worstWinrate = activePlayers.length
+    ? Math.min(...activePlayers.map((p) => Number(p.winrate ?? 0)))
     : 0;
 
-  const bestKda = players.length
-    ? Math.max(...players.map((p) => Number(p.kda ?? 0)))
+  const bestKda = activePlayers.length
+    ? Math.max(...activePlayers.map((p) => Number(p.kda ?? 0)))
     : 0;
 
-  const worstKda = players.length
-    ? Math.min(...players.map((p) => Number(p.kda ?? 0)))
+  const worstKda = activePlayers.length
+    ? Math.min(...activePlayers.map((p) => Number(p.kda ?? 0)))
     : 0;
 
-  const bestDamage = players.length
-    ? Math.max(...players.map((p) => Number(p.avgDamage ?? 0)))
+  const bestDamage = activePlayers.length
+    ? Math.max(...activePlayers.map((p) => Number(p.avgDamage ?? 0)))
     : 0;
 
-  const worstDamage = players.length
-    ? Math.min(...players.map((p) => Number(p.avgDamage ?? 0)))
+  const worstDamage = activePlayers.length
+    ? Math.min(...activePlayers.map((p) => Number(p.avgDamage ?? 0)))
     : 0;
 
-  const bestDeaths = players.length
-    ? Math.max(...players.map((p) => Number(p.avgDeaths ?? 0)))
+  const bestDeaths = activePlayers.length
+    ? Math.max(...activePlayers.map((p) => Number(p.avgDeaths ?? 0)))
     : 0;
 
-  const worstDeaths = players.length
-    ? Math.min(...players.map((p) => Number(p.avgDeaths ?? 0)))
+  const worstDeaths = activePlayers.length
+    ? Math.min(...activePlayers.map((p) => Number(p.avgDeaths ?? 0)))
     : 0;
 
-  const bestTopKillsGame = players.length
-    ? Math.max(...players.map((p) => Number(p.topKillsGame ?? 0)))
+  const bestTopKillsGame = activePlayers.length
+    ? Math.max(...activePlayers.map((p) => Number(p.topKillsGame ?? 0)))
     : 0;
 
-  const worstTopDeathsGame = players.length
-    ? Math.max(...players.map((p) => Number(p.topDeathsGame ?? 0)))
+  const worstTopDeathsGame = activePlayers.length
+    ? Math.max(...activePlayers.map((p) => Number(p.topDeathsGame ?? 0)))
     : 0;
 
-  const overallBest = getLeader(players, "overallScore", true);
-  const topDamage = getLeader(players, "avgDamage", true);
-  const topWinrate = getLeader(players, "winrate", true);
-  const topKda = getLeader(players, "kda", true);
-  const topKillsGame = getLeader(players, "topKillsGame", true);
-  const topDeathsGame = getLeader(players, "topDeathsGame", true);
-  const topDeathsPerGame = getLeader(players, "avgDeaths", true);
+  const overallBest = getLeader(activePlayers, "overallScore", true);
+  const topDamage = getLeader(activePlayers, "avgDamage", true);
+  const topWinrate = getLeader(activePlayers, "winrate", true);
+  const topKda = getLeader(activePlayers, "kda", true);
+  const topKillsGame = getLeader(activePlayers, "topKillsGame", true);
+  const topDeathsGame = getLeader(activePlayers, "topDeathsGame", true);
+  const topDeathsPerGame = getLeader(activePlayers, "avgDeaths", true);
 
-  const totalTrackedGames = players.reduce(
+  const totalTrackedGames = activePlayers.reduce(
     (sum, p) => sum + Number(p.trackedGames ?? 0),
     0
   );
@@ -276,10 +278,10 @@ export default function Home() {
         </div>
       </div>
 
-      {players.length === 0 ? (
+      {activePlayers.length === 0 ? (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
-          Ingen data endnu. Tryk{" "}
-          <span className="text-emerald-400">Opdater stats</span>.
+          Ingen recorded games endnu. Spillere kommer først på leaderboardet,
+          når de har mindst ét tracked game.
         </div>
       ) : (
         <>
@@ -335,84 +337,98 @@ export default function Home() {
                   <th className="px-3 py-3">#</th>
                   <th className="px-3 py-3">Spiller</th>
                   <th className="px-3 py-3">Role</th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("score")}
                   >
                     Flex Rank {sortArrow("score")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("wins")}
                   >
                     Tracked W/L {sortArrow("wins")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("winrate")}
                   >
                     Tracked WR {sortArrow("winrate")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("trackedGames")}
                   >
                     Games {sortArrow("trackedGames")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("overallScore")}
                   >
                     Overall {sortArrow("overallScore")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("kda")}
                   >
                     KDA {sortArrow("kda")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgKills")}
                   >
                     Avg kills {sortArrow("avgKills")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgDeaths")}
                   >
                     Avg deaths {sortArrow("avgDeaths")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgAssists")}
                   >
                     Avg assists {sortArrow("avgAssists")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("topKillsGame")}
                   >
                     Top kills {sortArrow("topKillsGame")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("topDeathsGame")}
                   >
                     Top deaths {sortArrow("topDeathsGame")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgDamage")}
                   >
                     Damage {sortArrow("avgDamage")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgCsMin")}
                   >
                     CS/min {sortArrow("avgCsMin")}
                   </th>
+
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgVision")}
@@ -542,13 +558,12 @@ export default function Home() {
           </div>
 
           <p className="mt-4 text-sm text-zinc-500">
-            Klik på kolonneoverskrifterne for at sortere. Flex rank er live
-            rank. W/L, WR, KDA, damage, CS/min, vision og awards tæller kun
-            tracked games efter reset.
+            Klik på kolonneoverskrifterne for at sortere. Spillere uden recorded
+            games vises ikke endnu.
           </p>
 
           <div className="mt-10 space-y-6">
-            {players.map((p) => (
+            {activePlayers.map((p) => (
               <div
                 key={`recent-${p.name}-${p.gameName}`}
                 className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
@@ -559,7 +574,9 @@ export default function Home() {
                 >
                   <div>
                     <h2 className="text-2xl font-bold">{p.name}</h2>
-                    <p className="text-sm text-zinc-500">Seneste tracked games</p>
+                    <p className="text-sm text-zinc-500">
+                      Seneste tracked games
+                    </p>
                   </div>
 
                   <div className="text-sm text-zinc-500">
@@ -588,7 +605,9 @@ export default function Home() {
                             </span>
 
                             <div>
-                              <div className="font-semibold">{match.champion}</div>
+                              <div className="font-semibold">
+                                {match.champion}
+                              </div>
                               <div className="text-sm text-zinc-500">
                                 {match.kills}/{match.deaths}/{match.assists}
                               </div>

@@ -18,6 +18,13 @@ export const players = [
     mainRole: "MID",
     secondRole: "ADC",
   },
+   {
+    name: "Gustav",
+    gameName: "Guszhii",
+    tagLine: "4649",
+    mainRole: "JNGL",
+    secondRole: "TOP",
+  },
   {
     name: "Ivan",
     gameName: "Sylwester35",
