@@ -64,6 +64,15 @@ function findOldPlayer(oldLeaderboard: any[], player: any) {
   );
 }
 
+function getStatAccounts(player: any) {
+  return player.statAccounts ?? [
+    {
+      gameName: player.gameName,
+      tagLine: player.tagLine,
+    },
+  ];
+}
+
 export async function POST() {
   const hasLock = await acquireRefreshLock();
 
@@ -78,42 +87,52 @@ export async function POST() {
     const oldLeaderboard = await readLeaderboard();
     const data = [];
 
+    // Step 1: Cache newest match from every stat account
     for (const player of players) {
-      try {
-        const statGameName = player.statGameName ?? player.gameName;
-        const statTagLine = player.statTagLine ?? player.tagLine;
+      const statAccounts = getStatAccounts(player);
 
-        const account = await getAccount(statGameName, statTagLine);
-        const matchIds = await getFlexMatchIds(account.puuid, 1);
+      for (const statAccount of statAccounts) {
+        try {
+          const statAccountData = await getAccount(
+            statAccount.gameName,
+            statAccount.tagLine
+          );
 
-        for (const id of matchIds) {
-          try {
-            await getCachedMatch(id);
-          } catch (error: any) {
-            console.log("MATCH CACHE ERROR:", id, error.message);
+          const matchIds = await getFlexMatchIds(statAccountData.puuid, 1);
+
+          for (const id of matchIds) {
+            try {
+              await getCachedMatch(id);
+            } catch (error: any) {
+              console.log("MATCH CACHE ERROR:", id, error.message);
+            }
           }
+        } catch (error: any) {
+          console.log(
+            "CACHE WARMUP ACCOUNT ERROR:",
+            player.name,
+            statAccount.gameName,
+            error.message
+          );
         }
-      } catch (error: any) {
-        console.log("CACHE WARMUP PLAYER ERROR:", player.name, error.message);
       }
     }
 
     const allMatches = await getAllCachedMatches();
 
+    // Step 2: Build leaderboard
     for (const player of players) {
       const oldPlayer = findOldPlayer(oldLeaderboard, player);
 
       try {
-        const statGameName = player.statGameName ?? player.gameName;
-        const statTagLine = player.statTagLine ?? player.tagLine;
-
-        const account = await getAccount(statGameName, statTagLine);
+        // Main account = visual rank
+        const mainAccount = await getAccount(player.gameName, player.tagLine);
 
         let flexRank: any = null;
         let rankFetchError: string | null = null;
 
         try {
-          const ranks = await getRankByPuuid(account.puuid);
+          const ranks = await getRankByPuuid(mainAccount.puuid);
           flexRank = ranks.find((r: any) => r.queueType === "RANKED_FLEX_SR");
         } catch (error: any) {
           rankFetchError = error.message;
@@ -128,22 +147,47 @@ export async function POST() {
           ? rankValue(flexRank.tier, flexRank.rank, flexRank.leaguePoints)
           : oldPlayer?.score ?? rankValue(tier, rank, lp);
 
+        // Stat accounts = all accounts counted for performance
+        const statAccounts = getStatAccounts(player);
+
+        const statPuuids: string[] = [];
+
+        for (const statAccount of statAccounts) {
+          try {
+            const statAccountData = await getAccount(
+              statAccount.gameName,
+              statAccount.tagLine
+            );
+
+            statPuuids.push(statAccountData.puuid);
+          } catch (error: any) {
+            console.log(
+              "STAT ACCOUNT FETCH ERROR:",
+              player.name,
+              statAccount.gameName,
+              error.message
+            );
+          }
+        }
+
         const trackedMatches = allMatches.filter((match: any) => {
           if (!match?.info?.participants) return false;
 
           const isAfterReset =
             Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
 
-          const hasPlayer = match.info.participants.some(
-            (p: any) => p.puuid === account.puuid
+          const hasAnyStatAccount = match.info.participants.some((p: any) =>
+            statPuuids.includes(p.puuid)
           );
 
-          return isAfterReset && hasPlayer;
+          return isAfterReset && hasAnyStatAccount;
         });
 
         const performances = trackedMatches
           .map((match: any) =>
-            match.info.participants.find((p: any) => p.puuid === account.puuid)
+            match.info.participants.find((p: any) =>
+              statPuuids.includes(p.puuid)
+            )
           )
           .filter(Boolean);
 
@@ -215,8 +259,8 @@ export async function POST() {
           .sort((a: any, b: any) => getMatchTimestamp(b) - getMatchTimestamp(a))
           .slice(0, 5)
           .map((match: any) => {
-            const playerStats = match.info.participants.find(
-              (p: any) => p.puuid === account.puuid
+            const playerStats = match.info.participants.find((p: any) =>
+              statPuuids.includes(p.puuid)
             );
 
             if (!playerStats) return null;
@@ -276,14 +320,14 @@ export async function POST() {
           topDeathsGame,
           overallScore,
           error: rankFetchError
-            ? `Rank endpoint failed. Using last known rank.`
+            ? "Rank endpoint failed. Using last known rank."
             : undefined,
         });
       } catch (error: any) {
         if (oldPlayer) {
           data.push({
             ...oldPlayer,
-            error: `Refresh failed. Using last known data.`,
+            error: "Refresh failed. Using last known data.",
           });
         } else {
           data.push({

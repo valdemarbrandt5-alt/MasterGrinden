@@ -1,16 +1,15 @@
 export const players = [
   {
-    name: "Valdemar",
-    gameName: "Brandtenz",
-    tagLine: "3700",
-
-    // stats hentes fra alt
-    statGameName: "Ivan Er Chopped",
-    statTagLine: "2300",
-
-    mainRole: "ADC",
-    secondRole: "MID",
-  },
+  name: "Valdemar",
+  gameName: "Brandtenz",
+  tagLine: "3700",
+  statAccounts: [
+    { gameName: "Brandtenz", tagLine: "3700" },
+    { gameName: "Ivan Er Chopped", tagLine: "2300" },
+  ],
+  mainRole: "ADC",
+  secondRole: "MID",
+},
   {
     name: "Mads",
     gameName: "Raller0987",
