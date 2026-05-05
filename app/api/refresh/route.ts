@@ -171,17 +171,20 @@ export async function POST() {
         }
 
         const trackedMatches = allMatches.filter((match: any) => {
-          if (!match?.info?.participants) return false;
+  if (!match?.info?.participants) return false;
 
-          const isAfterReset =
-            Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
+  const isAfterReset =
+    Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
 
-          const hasAnyStatAccount = match.info.participants.some((p: any) =>
-            statPuuids.includes(p.puuid)
-          );
+  const hasAnyStatAccount = match.info.participants.some((p: any) =>
+    statPuuids.includes(p.puuid)
+  );
 
-          return isAfterReset && hasAnyStatAccount;
-        });
+  const gameMinutes = (match.info.gameDuration ?? 0) / 60;
+  const isRealGame = gameMinutes >= 5;
+
+  return isAfterReset && hasAnyStatAccount && isRealGame;
+});
 
         const performances = trackedMatches
           .map((match: any) =>
