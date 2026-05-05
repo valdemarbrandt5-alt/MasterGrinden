@@ -87,7 +87,6 @@ export async function POST() {
     const oldLeaderboard = await readLeaderboard();
     const data = [];
 
-    // Step 1: Cache newest match from every stat account
     for (const player of players) {
       const statAccounts = getStatAccounts(player);
 
@@ -120,12 +119,10 @@ export async function POST() {
 
     const allMatches = await getAllCachedMatches();
 
-    // Step 2: Build leaderboard
     for (const player of players) {
       const oldPlayer = findOldPlayer(oldLeaderboard, player);
 
       try {
-        // Main account = visual rank
         const mainAccount = await getAccount(player.gameName, player.tagLine);
 
         let flexRank: any = null;
@@ -147,9 +144,7 @@ export async function POST() {
           ? rankValue(flexRank.tier, flexRank.rank, flexRank.leaguePoints)
           : oldPlayer?.score ?? rankValue(tier, rank, lp);
 
-        // Stat accounts = all accounts counted for performance
         const statAccounts = getStatAccounts(player);
-
         const statPuuids: string[] = [];
 
         for (const statAccount of statAccounts) {
@@ -171,22 +166,34 @@ export async function POST() {
         }
 
         const trackedMatches = allMatches.filter((match: any) => {
-  if (!match?.info?.participants) return false;
+          if (!match?.info?.participants) return false;
 
-  const isAfterReset =
-    Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
+          const isAfterReset =
+            Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
 
-  const hasAnyStatAccount = match.info.participants.some((p: any) =>
-    statPuuids.includes(p.puuid)
-  );
+          const hasAnyStatAccount = match.info.participants.some((p: any) =>
+            statPuuids.includes(p.puuid)
+          );
 
-  const gameMinutes = (match.info.gameDuration ?? 0) / 60;
-  const isRealGame = gameMinutes >= 5;
+          const gameMinutes = (match.info.gameDuration ?? 0) / 60;
+          const isRealGame = gameMinutes >= 5;
 
-  return isAfterReset && hasAnyStatAccount && isRealGame;
-});
+          return isAfterReset && hasAnyStatAccount && isRealGame;
+        });
+
+        const sortedTrackedMatches = [...trackedMatches].sort(
+          (a: any, b: any) => getMatchTimestamp(a) - getMatchTimestamp(b)
+        );
 
         const performances = trackedMatches
+          .map((match: any) =>
+            match.info.participants.find((p: any) =>
+              statPuuids.includes(p.puuid)
+            )
+          )
+          .filter(Boolean);
+
+        const sortedPerformances = sortedTrackedMatches
           .map((match: any) =>
             match.info.participants.find((p: any) =>
               statPuuids.includes(p.puuid)
@@ -258,7 +265,24 @@ export async function POST() {
         const topDeathsGame =
           games > 0 ? Math.max(...performances.map((p: any) => p.deaths)) : 0;
 
-        const recentMatches = trackedMatches
+        let currentWinStreak = 0;
+        let highestWinStreak = 0;
+
+        for (const performance of sortedPerformances) {
+          if (performance.win) {
+            currentWinStreak += 1;
+            highestWinStreak = Math.max(highestWinStreak, currentWinStreak);
+          } else {
+            currentWinStreak = 0;
+          }
+        }
+
+        const pentakills = performances.reduce(
+          (sum: number, p: any) => sum + (p.pentaKills ?? 0),
+          0
+        );
+
+        const recentMatches = [...trackedMatches]
           .sort((a: any, b: any) => getMatchTimestamp(b) - getMatchTimestamp(a))
           .slice(0, 5)
           .map((match: any) => {
@@ -321,6 +345,9 @@ export async function POST() {
           avgVision,
           topKillsGame,
           topDeathsGame,
+          currentWinStreak,
+          highestWinStreak,
+          pentakills,
           overallScore,
           error: rankFetchError
             ? "Rank endpoint failed. Using last known rank."
@@ -353,6 +380,9 @@ export async function POST() {
             avgVision: 0,
             topKillsGame: 0,
             topDeathsGame: 0,
+            currentWinStreak: 0,
+            highestWinStreak: 0,
+            pentakills: 0,
             overallScore: 0,
             error: error.message,
           });

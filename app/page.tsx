@@ -246,6 +246,8 @@ export default function Home() {
   const topKillsGame = getLeader(activePlayers, "topKillsGame", true);
   const topDeathsGame = getLeader(activePlayers, "topDeathsGame", true);
   const topDeathsPerGame = getLeader(activePlayers, "avgDeaths", true);
+  const topWinStreak = getLeader(activePlayers, "highestWinStreak", true);
+  const topPentakills = getLeader(activePlayers, "pentakills", true);
 
   const totalTrackedGames = activePlayers.reduce(
     (sum, p) => sum + Number(p.trackedGames ?? 0),
@@ -257,7 +259,7 @@ export default function Home() {
       <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-5xl font-black">Flex Master Tracker</h1>
-           <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500">
             Tracked games i alt: {totalTrackedGames}
           </p>
         </div>
@@ -282,7 +284,7 @@ export default function Home() {
         </div>
       ) : (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-7">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-9">
             <AwardCard
               title="Overall bedste"
               player={overallBest}
@@ -325,10 +327,22 @@ export default function Home() {
               value={`${topDeathsPerGame?.avgDeaths ?? 0} deaths/game`}
               tone="red"
             />
+            <AwardCard
+              title="Højeste winstreak"
+              player={topWinStreak}
+              value={`${topWinStreak?.highestWinStreak ?? 0} wins`}
+              tone="yellow"
+            />
+            <AwardCard
+              title="Pentakills"
+              player={topPentakills}
+              value={`${topPentakills?.pentakills ?? 0} pentas`}
+              tone="purple"
+            />
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
-            <table className="w-full min-w-[1200px] text-left text-sm">
+            <table className="w-full min-w-[1350px] text-left text-sm">
               <thead className="bg-zinc-900 text-zinc-300">
                 <tr>
                   <th className="px-3 py-3">#</th>
@@ -414,6 +428,20 @@ export default function Home() {
 
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                    onClick={() => handleSort("highestWinStreak")}
+                  >
+                    Winstreak {sortArrow("highestWinStreak")}
+                  </th>
+
+                  <th
+                    className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                    onClick={() => handleSort("pentakills")}
+                  >
+                    Pentas {sortArrow("pentakills")}
+                  </th>
+
+                  <th
+                    className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgDamage")}
                   >
                     Damage {sortArrow("avgDamage")}
@@ -444,7 +472,18 @@ export default function Home() {
                     <td className="p-4 text-xl font-bold">{index + 1}</td>
 
                     <td className="px-3 py-3">
-                      <div className="text-lg font-bold">{p.name}</div>
+                      <div className="flex items-center gap-2 text-lg font-bold">
+                        <span>{p.name}</span>
+                        {Number(p.currentWinStreak ?? 0) > 0 && (
+                          <img
+                            src="/emojis/Flame.png"
+                            alt="Flame"
+                            title={`${p.currentWinStreak} win streak`}
+                            className="h-5 w-5 object-contain"
+                          />
+                        )}
+                      </div>
+
                       <div className="text-sm text-zinc-500">
                         {p.gameName}#{p.tagLine}
                       </div>
@@ -534,6 +573,14 @@ export default function Home() {
                       )}`}
                     >
                       {p.topDeathsGame ?? 0}
+                    </td>
+
+                    <td className="p-4 font-bold text-yellow-300">
+                      {p.highestWinStreak ?? 0}
+                    </td>
+
+                    <td className="p-4 font-bold text-purple-400">
+                      {p.pentakills ?? 0}
                     </td>
 
                     <td
