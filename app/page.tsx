@@ -484,7 +484,7 @@ export default function Home() {
       alt="Flame"
       className="h-7 w-7 object-contain"
     />
-    <span className="absolute mt-1 text-[10px] font-black text-white drop-shadow">
+    <span className="absolute mt-1 text-[20px] font-black text-white drop-shadow">
       {p.currentWinStreak}
     </span>
   </div>
