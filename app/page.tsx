@@ -474,14 +474,21 @@ export default function Home() {
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2 text-lg font-bold">
                         <span>{p.name}</span>
-                        {Number(p.currentWinStreak ?? 0) > 0 && (
-                          <img
-                            src="/emojis/Flame.png"
-                            alt="Flame"
-                            title={`${p.currentWinStreak} win streak`}
-                            className="h-5 w-5 object-contain"
-                          />
-                        )}
+                        {Number(p.currentWinStreak ?? 0) > 2 && (
+  <div
+    title={`${p.currentWinStreak} win streak`}
+    className="relative flex h-7 w-7 items-center justify-center"
+  >
+    <img
+      src="/emojis/Flame.png"
+      alt="Flame"
+      className="h-7 w-7 object-contain"
+    />
+    <span className="absolute mt-1 text-[10px] font-black text-white drop-shadow">
+      {p.currentWinStreak}
+    </span>
+  </div>
+)}
                       </div>
 
                       <div className="text-sm text-zinc-500">
