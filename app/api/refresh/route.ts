@@ -97,7 +97,7 @@ export async function POST() {
             statAccount.tagLine
           );
 
-          const matchIds = await getFlexMatchIds(statAccountData.puuid, 1);
+          const matchIds = await getFlexMatchIds(statAccountData.puuid, 2);
 
           for (const id of matchIds) {
             try {
