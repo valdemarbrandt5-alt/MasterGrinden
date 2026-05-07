@@ -118,6 +118,23 @@ export async function POST() {
     }
 
     const allMatches = await getAllCachedMatches();
+    const allTrackedPuuids: string[] = [];
+
+for (const player of players) {
+  const statAccounts = getStatAccounts(player);
+
+  for (const statAccount of statAccounts) {
+    try {
+      const account = await getAccount(statAccount.gameName, statAccount.tagLine);
+
+      if (!allTrackedPuuids.includes(account.puuid)) {
+        allTrackedPuuids.push(account.puuid);
+      }
+    } catch (error: any) {
+      console.log("GLOBAL PUUID FETCH ERROR:", player.name, error.message);
+    }
+  }
+}
 
     for (const player of players) {
       const oldPlayer = findOldPlayer(oldLeaderboard, player);
@@ -166,20 +183,26 @@ export async function POST() {
         }
 
         const trackedMatches = allMatches.filter((match: any) => {
-          if (!match?.info?.participants) return false;
+  if (!match?.info?.participants) return false;
 
-          const isAfterReset =
-            Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
+  const isAfterReset =
+    Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
 
-          const hasAnyStatAccount = match.info.participants.some((p: any) =>
-            statPuuids.includes(p.puuid)
-          );
+  const hasAnyStatAccount = match.info.participants.some((p: any) =>
+    statPuuids.includes(p.puuid)
+  );
 
-          const gameMinutes = (match.info.gameDuration ?? 0) / 60;
-          const isRealGame = gameMinutes >= 5;
+  const trackedPlayersInMatch = match.info.participants.filter((p: any) =>
+    allTrackedPuuids.includes(p.puuid)
+  ).length;
 
-          return isAfterReset && hasAnyStatAccount && isRealGame;
-        });
+  const isPremadeGame = trackedPlayersInMatch >= 2;
+
+  const gameMinutes = (match.info.gameDuration ?? 0) / 60;
+  const isRealGame = gameMinutes >= 5;
+
+  return isAfterReset && hasAnyStatAccount && isRealGame && isPremadeGame;
+});
 
         const sortedTrackedMatches = [...trackedMatches].sort(
           (a: any, b: any) => getMatchTimestamp(a) - getMatchTimestamp(b)
