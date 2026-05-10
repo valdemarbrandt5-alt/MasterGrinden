@@ -4,7 +4,7 @@ import { getAccount, getClashMatchIds } from "@/lib/riot";
 import { getCachedClashMatch, getAllClashMatches } from "@/lib/clashCache";
 
 const CLASH_START_TIME = Math.floor(
-  new Date("2026-05-9T20:00:00+02:00").getTime() / 1000
+  new Date("2026-05-09T20:00:00+02:00").getTime() / 1000
 );
 
 function getStatAccounts(player: any) {
