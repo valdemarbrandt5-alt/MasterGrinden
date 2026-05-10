@@ -63,12 +63,25 @@ export default function ClashPage() {
         method: "POST",
       });
 
-      const data = await res.json();
+      const text = await res.text();
 
-      if (!res.ok || !Array.isArray(data)) {
-        setMessage("Clash refresh fejlede.");
-        return;
-      }
+let data: any;
+try {
+  data = JSON.parse(text);
+} catch {
+  setMessage(`Clash refresh fejlede: ${text.slice(0, 200)}`);
+  return;
+}
+
+if (!res.ok) {
+  setMessage(`Clash refresh fejlede: ${data?.error ?? res.status}`);
+  return;
+}
+
+if (!Array.isArray(data)) {
+  setMessage(`Clash refresh gav forkert data: ${JSON.stringify(data).slice(0, 200)}`);
+  return;
+}
 
       setPlayers(data.filter((p: any) => Number(p.clashGames ?? 0) > 0));
       setMessage("Clash stats opdateret.");
