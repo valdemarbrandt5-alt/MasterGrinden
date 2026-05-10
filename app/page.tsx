@@ -264,17 +264,26 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="flex flex-col items-start gap-2 md:items-end">
-          <button
-            onClick={refreshData}
-            disabled={loading}
-            className="rounded-xl bg-emerald-500 px-5 py-3 font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
-          >
-            {loading ? "Opdaterer..." : "Opdater stats"}
-          </button>
+       <div className="flex flex-col items-start gap-2 md:items-end">
+  <div className="flex gap-3">
+    <a
+      href="/clash"
+      className="rounded-xl bg-purple-500 px-5 py-3 font-bold text-black hover:bg-purple-400"
+    >
+      Clash Tracker
+    </a>
 
-          {message && <div className="text-sm text-zinc-400">{message}</div>}
-        </div>
+    <button
+      onClick={refreshData}
+      disabled={loading}
+      className="rounded-xl bg-emerald-500 px-5 py-3 font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
+    >
+      {loading ? "Opdaterer..." : "Opdater stats"}
+    </button>
+  </div>
+
+  {message && <div className="text-sm text-zinc-400">{message}</div>}
+</div>
       </div>
 
       {activePlayers.length === 0 ? (

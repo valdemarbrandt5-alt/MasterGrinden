@@ -60,3 +60,9 @@ export async function getFlexMatchIds(puuid: string, count = 1) {
 export async function getMatch(matchId: string) {
   return riotFetch(`${EUROPE}/lol/match/v5/matches/${matchId}`);
 }
+
+export async function getClashMatchIds(puuid: string, count = 5) {
+  return riotFetch(
+    `${EUROPE}/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=700&start=0&count=${count}`
+  );
+}
