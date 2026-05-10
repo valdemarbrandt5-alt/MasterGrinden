@@ -132,7 +132,7 @@ export async function POST() {
   return (
     isAfterClashStart &&
     isRealGame &&
-    isClashGame &&
+    
     hasPlayer &&
     isTeamGame
   );
