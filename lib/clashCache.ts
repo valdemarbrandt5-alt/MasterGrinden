@@ -12,6 +12,12 @@ export async function getCachedClashMatch(matchId: string, tournamentId = "main"
 
   const match = await getMatch(matchId);
 
+  // Gem kun rigtige Clash games
+  if (match?.info?.queueId !== 700) {
+    console.log("SKIPPING NON-CLASH MATCH:", matchId, match?.info?.queueId);
+    return null;
+  }
+
   await supabase.from("clash_matches").upsert({
     match_id: matchId,
     tournament_id: tournamentId,
@@ -22,7 +28,9 @@ export async function getCachedClashMatch(matchId: string, tournamentId = "main"
 }
 
 export async function getAllClashMatches() {
-  const { data, error } = await supabase.from("clash_matches").select("data");
+  const { data, error } = await supabase
+    .from("clash_matches")
+    .select("data");
 
   if (error) {
     console.log("CLASH CACHE READ ERROR:", error.message);
