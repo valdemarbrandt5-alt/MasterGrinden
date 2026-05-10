@@ -128,14 +128,15 @@ export async function POST() {
   ).length;
 
   const isTeamGame = trackedPlayersInMatch >= 2;
+  const isClashGame = match.info.queueId === 700;
 
   return (
-    isAfterClashStart &&
-    isRealGame &&
-    
-    hasPlayer &&
-    isTeamGame
-  );
+  isAfterClashStart &&
+  isRealGame &&
+  isClashGame &&
+  hasPlayer &&
+  isTeamGame
+);
 });
 
       const performances = playerMatches
