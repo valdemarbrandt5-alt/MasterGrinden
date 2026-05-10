@@ -110,25 +110,33 @@ export async function POST() {
       }
 
       const playerMatches = allMatches.filter((match: any) => {
-        if (!match?.info?.participants) return false;
+  if (!match?.info?.participants) return false;
 
-        const isAfterClashStart =
-          Math.floor(match.info.gameCreation / 1000) >= CLASH_START_TIME;
+  const isAfterClashStart =
+    Math.floor(match.info.gameCreation / 1000) >= CLASH_START_TIME;
 
-        const isRealGame = (match.info.gameDuration ?? 0) / 60 >= 5;
+  const isRealGame = (match.info.gameDuration ?? 0) / 60 >= 5;
 
-        const hasPlayer = match.info.participants.some((p: any) =>
-          statPuuids.includes(p.puuid)
-        );
+  const isClashGame = match.info.queueId === 700;
 
-        const trackedPlayersInMatch = match.info.participants.filter((p: any) =>
-          allTrackedPuuids.includes(p.puuid)
-        ).length;
+  const hasPlayer = match.info.participants.some((p: any) =>
+    statPuuids.includes(p.puuid)
+  );
 
-        const isTeamGame = trackedPlayersInMatch >= 2;
+  const trackedPlayersInMatch = match.info.participants.filter((p: any) =>
+    allTrackedPuuids.includes(p.puuid)
+  ).length;
 
-        return isAfterClashStart && isRealGame && hasPlayer && isTeamGame;
-      });
+  const isTeamGame = trackedPlayersInMatch >= 2;
+
+  return (
+    isAfterClashStart &&
+    isRealGame &&
+    isClashGame &&
+    hasPlayer &&
+    isTeamGame
+  );
+});
 
       const performances = playerMatches
         .map((match: any) =>
