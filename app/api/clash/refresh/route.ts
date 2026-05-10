@@ -4,7 +4,7 @@ import { getAccount, getClashMatchIds } from "@/lib/riot";
 import { getCachedClashMatch, getAllClashMatches } from "@/lib/clashCache";
 
 const CLASH_START_TIME = Math.floor(
-  new Date("2026-05-09T20:00:00+02:00").getTime() / 1000
+  new Date("2026-05-10T18:00:00+02:00").getTime() / 1000
 );
 
 function getStatAccounts(player: any) {
@@ -117,7 +117,7 @@ export async function POST() {
 
   const isRealGame = (match.info.gameDuration ?? 0) / 60 >= 5;
 
-  const isClashGame = match.info.queueId === 700;
+  
 
   const hasPlayer = match.info.participants.some((p: any) =>
     statPuuids.includes(p.puuid)
