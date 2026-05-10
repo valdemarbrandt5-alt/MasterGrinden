@@ -54,7 +54,7 @@ export async function POST() {
             statAccount.tagLine
           );
 
-          const matchIds = await getClashMatchIds(account.puuid, 10);
+          const matchIds = await getClashMatchIds(account.puuid, 3);
 
           for (const id of matchIds) {
             try {
