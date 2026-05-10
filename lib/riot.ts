@@ -63,6 +63,6 @@ export async function getMatch(matchId: string) {
 
 export async function getClashMatchIds(puuid: string, count = 3) {
   return riotFetch(
-    `${EUROPE}/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=700&start=0&count=${count}`
+    `${EUROPE}/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${count}`
   );
 }
