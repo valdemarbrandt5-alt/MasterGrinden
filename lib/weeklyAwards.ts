@@ -43,12 +43,12 @@ export async function readWeeklyAwards() {
 }
 
 export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
-  if (!isFridayCopenhagen()) return;
+  //if (!isFridayCopenhagen()) return;
 
   const oldAwards = await readWeeklyAwards();
   const weekKey = getCopenhagenWeekKey();
 
-  if (oldAwards?.weekKey === weekKey) return;
+ // if (oldAwards?.weekKey === weekKey) return;
 
   const weeklyPlayers = leaderboard
     .filter((p: any) => Number(p.weekly?.games ?? 0) > 0)
