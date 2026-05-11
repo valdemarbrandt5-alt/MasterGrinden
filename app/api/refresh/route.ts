@@ -73,7 +73,24 @@ function getStatAccounts(player: any) {
     },
   ];
 }
+function getLastFridayTimestamp() {
+  const now = new Date();
 
+  const copenhagenNow = new Date(
+    now.toLocaleString("en-US", {
+      timeZone: "Europe/Copenhagen",
+    })
+  );
+
+  const day = copenhagenNow.getDay();
+
+  const daysSinceFriday = (day + 2) % 7;
+
+  copenhagenNow.setDate(copenhagenNow.getDate() - daysSinceFriday);
+  copenhagenNow.setHours(0, 0, 0, 0);
+
+  return Math.floor(copenhagenNow.getTime() / 1000);
+}
 export async function POST() {
   const hasLock = await acquireRefreshLock();
 
@@ -182,10 +199,12 @@ for (const player of players) {
             );
           }
         }
-
+const weeklyStartTimestamp = getLastFridayTimestamp();
         const trackedMatches = allMatches.filter((match: any) => {
   if (!match?.info?.participants) return false;
-
+const isWeeklyMatch =
+  Math.floor(match.info.gameCreation / 1000) >=
+  weeklyStartTimestamp;
   const isAfterReset =
     Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
 
@@ -202,7 +221,13 @@ for (const player of players) {
   const gameMinutes = (match.info.gameDuration ?? 0) / 60;
   const isRealGame = gameMinutes >= 5;
 
-  return isAfterReset && hasAnyStatAccount && isRealGame && isPremadeGame;
+  return (
+  isAfterReset &&
+  hasAnyStatAccount &&
+  isRealGame &&
+  isPremadeGame &&
+  isWeeklyMatch
+);
 });
 
         const sortedTrackedMatches = [...trackedMatches].sort(

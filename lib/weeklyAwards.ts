@@ -57,11 +57,23 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
     .map((p: any) => {
       const oldGames = Number(oldSnapshot[p.name]?.trackedGames ?? 0);
       const newGames = Number(p.trackedGames ?? 0);
+
+      const oldDeathsTotal = Number(oldSnapshot[p.name]?.deathsTotal ?? 0);
+      const newDeathsTotal = Number(p.avgDeaths ?? 0) * newGames;
+
       const gamesSinceLastFriday = newGames - oldGames;
+      const deathsSinceLastFriday = newDeathsTotal - oldDeathsTotal;
+
+      const weeklyDeathsPerGame =
+        gamesSinceLastFriday > 0
+          ? Number((deathsSinceLastFriday / gamesSinceLastFriday).toFixed(2))
+          : 0;
 
       return {
         ...p,
         gamesSinceLastFriday,
+        deathsSinceLastFriday,
+        weeklyDeathsPerGame,
       };
     })
     .filter(
@@ -95,14 +107,25 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
     })
     .sort((a, b) => Number(b.improvement ?? 0) - Number(a.improvement ?? 0))[0];
 
+  const intWinner = [...eligiblePlayers].sort(
+    (a, b) =>
+      Number(b.weeklyDeathsPerGame ?? 0) -
+      Number(a.weeklyDeathsPerGame ?? 0)
+  )[0];
+
   const snapshot: Record<string, any> = {};
 
   for (const p of leaderboard) {
+    const trackedGames = Number(p.trackedGames ?? 0);
+    const avgDeaths = Number(p.avgDeaths ?? 0);
+
     snapshot[p.name] = {
       overallScore: Number(p.overallScore ?? 0),
-      trackedGames: Number(p.trackedGames ?? 0),
+      trackedGames,
       winrate: Number(p.winrate ?? 0),
       kda: Number(p.kda ?? 0),
+      avgDeaths,
+      deathsTotal: Number((avgDeaths * trackedGames).toFixed(2)),
     };
   }
 
@@ -110,12 +133,14 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
     weekKey,
     minGamesSinceLastFriday: MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY,
     updatedAt: new Date().toISOString(),
+
     overallWinner: {
       name: overallWinner.name,
       overallScore: overallWinner.overallScore ?? 0,
       trackedGames: overallWinner.trackedGames ?? 0,
       gamesSinceLastFriday: overallWinner.gamesSinceLastFriday ?? 0,
     },
+
     improvedWinner: {
       name: improvedWinner.name,
       improvement: improvedWinner.improvement ?? 0,
@@ -123,6 +148,16 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
       newScore: improvedWinner.newScore ?? 0,
       gamesSinceLastFriday: improvedWinner.gamesSinceLastFriday ?? 0,
     },
+
+    intWinner: {
+      name: intWinner.name,
+      weeklyDeathsPerGame: intWinner.weeklyDeathsPerGame ?? 0,
+      deathsSinceLastFriday: Number(
+        (intWinner.deathsSinceLastFriday ?? 0).toFixed(1)
+      ),
+      gamesSinceLastFriday: intWinner.gamesSinceLastFriday ?? 0,
+    },
+
     snapshot,
   };
 

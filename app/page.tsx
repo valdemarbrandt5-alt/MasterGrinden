@@ -303,7 +303,17 @@ const topPentakills = getLeader(awardPlayers, "pentakills", true);
       ) : (
         <>
           {weeklyAwards && (
-            <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">
+  <div className="text-sm opacity-80">Ugens int</div>
+  <div className="mt-1 text-3xl font-black">
+    {weeklyAwards.intWinner?.name ?? "-"}
+  </div>
+  <div className="mt-1 text-zinc-300">
+    {weeklyAwards.intWinner?.weeklyDeathsPerGame ?? 0} deaths/game over{" "}
+    {weeklyAwards.intWinner?.gamesSinceLastFriday ?? 0} games
+  </div>
+</div>
               <div className="rounded-2xl border border-yellow-400/30 bg-yellow-400/10 p-6 text-yellow-300">
                 <div className="text-sm opacity-80">Ugens spiller</div>
                 <div className="mt-1 text-3xl font-black">
@@ -323,6 +333,7 @@ const topPentakills = getLeader(awardPlayers, "pentakills", true);
                   +{weeklyAwards.improvedWinner?.improvement ?? 0} score siden
                   sidste uge
                 </div>
+                
               </div>
             </div>
           )}
