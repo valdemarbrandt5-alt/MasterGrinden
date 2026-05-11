@@ -61,8 +61,3 @@ export async function getMatch(matchId: string) {
   return riotFetch(`${EUROPE}/lol/match/v5/matches/${matchId}`);
 }
 
-export async function getClashMatchIds(puuid: string, count = 3) {
-  return riotFetch(
-    `${EUROPE}/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${count}`
-  );
-}
