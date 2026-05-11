@@ -255,16 +255,18 @@ export default function Home() {
     ? Math.max(...activePlayers.map((p) => Number(p.topDeathsGame ?? 0)))
     : 0;
 
-  const overallBest = getLeader(activePlayers, "overallScore", true);
-  const topDamage = getLeader(activePlayers, "avgDamage", true);
-  const topWinrate = getLeader(activePlayers, "winrate", true);
-  const topKda = getLeader(activePlayers, "kda", true);
-  const topKillsGame = getLeader(activePlayers, "topKillsGame", true);
-  const topDeathsGame = getLeader(activePlayers, "topDeathsGame", true);
-  const topDeathsPerGame = getLeader(activePlayers, "avgDeaths", true);
-  const topWinStreak = getLeader(activePlayers, "highestWinStreak", true);
-  const topPentakills = getLeader(activePlayers, "pentakills", true);
-
+    const awardPlayers = activePlayers.filter(
+  (p) => Number(p.trackedGames ?? 0) >= 5
+);
+  const overallBest = getLeader(awardPlayers, "overallScore", true);
+const topDamage = getLeader(awardPlayers, "avgDamage", true);
+const topWinrate = getLeader(awardPlayers, "winrate", true);
+const topKda = getLeader(awardPlayers, "kda", true);
+const topKillsGame = getLeader(awardPlayers, "topKillsGame", true);
+const topDeathsGame = getLeader(awardPlayers, "topDeathsGame", true);
+const topDeathsPerGame = getLeader(awardPlayers, "avgDeaths", true);
+const topWinStreak = getLeader(awardPlayers, "highestWinStreak", true);
+const topPentakills = getLeader(awardPlayers, "pentakills", true);
   const totalTrackedGames = activePlayers.reduce(
     (sum, p) => sum + Number(p.trackedGames ?? 0),
     0

@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
 const WEEKLY_ID = "main";
-const MIN_GAMES_FOR_WEEKLY_AWARD = 5;
+const MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY = 5;
 
 function getCopenhagenWeekKey(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -43,17 +43,32 @@ export async function readWeeklyAwards() {
 }
 
 export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
-  // Slå denne til igen når du er færdig med at teste
-  // if (!isFridayCopenhagen()) return;
+  if (!isFridayCopenhagen()) return;
 
   const oldAwards = await readWeeklyAwards();
   const weekKey = getCopenhagenWeekKey();
 
   if (oldAwards?.weekKey === weekKey) return;
 
-  const eligiblePlayers = leaderboard.filter(
-    (p: any) => Number(p.trackedGames ?? 0) >= MIN_GAMES_FOR_WEEKLY_AWARD
-  );
+  const oldSnapshot = oldAwards?.snapshot ?? {};
+
+  const eligiblePlayers = leaderboard
+    .filter((p: any) => Number(p.trackedGames ?? 0) > 0)
+    .map((p: any) => {
+      const oldGames = Number(oldSnapshot[p.name]?.trackedGames ?? 0);
+      const newGames = Number(p.trackedGames ?? 0);
+      const gamesSinceLastFriday = newGames - oldGames;
+
+      return {
+        ...p,
+        gamesSinceLastFriday,
+      };
+    })
+    .filter(
+      (p: any) =>
+        Number(p.gamesSinceLastFriday ?? 0) >=
+        MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY
+    );
 
   if (!eligiblePlayers.length) {
     console.log("NO WEEKLY AWARD ELIGIBLE PLAYERS");
@@ -64,10 +79,8 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
     (a, b) => Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0)
   )[0];
 
-  const oldSnapshot = oldAwards?.snapshot ?? {};
-
   const improvedWinner = [...eligiblePlayers]
-    .map((p) => {
+    .map((p: any) => {
       const oldScore = Number(
         oldSnapshot[p.name]?.overallScore ?? p.overallScore ?? 0
       );
@@ -84,7 +97,7 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
 
   const snapshot: Record<string, any> = {};
 
-  for (const p of eligiblePlayers) {
+  for (const p of leaderboard) {
     snapshot[p.name] = {
       overallScore: Number(p.overallScore ?? 0),
       trackedGames: Number(p.trackedGames ?? 0),
@@ -95,18 +108,20 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
 
   const weeklyData = {
     weekKey,
-    minGamesRequired: MIN_GAMES_FOR_WEEKLY_AWARD,
+    minGamesSinceLastFriday: MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY,
     updatedAt: new Date().toISOString(),
     overallWinner: {
       name: overallWinner.name,
       overallScore: overallWinner.overallScore ?? 0,
       trackedGames: overallWinner.trackedGames ?? 0,
+      gamesSinceLastFriday: overallWinner.gamesSinceLastFriday ?? 0,
     },
     improvedWinner: {
       name: improvedWinner.name,
       improvement: improvedWinner.improvement ?? 0,
       oldScore: improvedWinner.oldScore ?? 0,
       newScore: improvedWinner.newScore ?? 0,
+      gamesSinceLastFriday: improvedWinner.gamesSinceLastFriday ?? 0,
     },
     snapshot,
   };
