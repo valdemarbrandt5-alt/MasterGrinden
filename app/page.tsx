@@ -212,6 +212,8 @@ export default function Home() {
     (p) => Number(p.trackedGames ?? 0) >= 5
   );
 
+  const weeklyPlayers = weeklyAwards?.weeklyPlayers ?? [];
+
   const sortedPlayers = [...activePlayers].sort((a, b) => {
     const av = Number(a[sortKey] ?? 0);
     const bv = Number(b[sortKey] ?? 0);
@@ -220,45 +222,337 @@ export default function Home() {
     return av - bv;
   });
 
-  const bestWinrate = activePlayers.length
-    ? Math.max(...activePlayers.map((p) => Number(p.winrate ?? 0)))
-    : 0;
+  const sortedWeeklyPlayers = [...weeklyPlayers].sort((a, b) => {
+    const av = Number(a[sortKey] ?? 0);
+    const bv = Number(b[sortKey] ?? 0);
 
-  const worstWinrate = activePlayers.length
-    ? Math.min(...activePlayers.map((p) => Number(p.winrate ?? 0)))
-    : 0;
+    if (sortDirection === "desc") return bv - av;
+    return av - bv;
+  });
 
-  const bestKda = activePlayers.length
-    ? Math.max(...activePlayers.map((p) => Number(p.kda ?? 0)))
-    : 0;
+  function renderLeaderboardTable(tablePlayers: any[]) {
+    const bestWinrate = tablePlayers.length
+      ? Math.max(...tablePlayers.map((p) => Number(p.winrate ?? 0)))
+      : 0;
 
-  const worstKda = activePlayers.length
-    ? Math.min(...activePlayers.map((p) => Number(p.kda ?? 0)))
-    : 0;
+    const worstWinrate = tablePlayers.length
+      ? Math.min(...tablePlayers.map((p) => Number(p.winrate ?? 0)))
+      : 0;
 
-  const bestDamage = activePlayers.length
-    ? Math.max(...activePlayers.map((p) => Number(p.avgDamage ?? 0)))
-    : 0;
+    const bestKda = tablePlayers.length
+      ? Math.max(...tablePlayers.map((p) => Number(p.kda ?? 0)))
+      : 0;
 
-  const worstDamage = activePlayers.length
-    ? Math.min(...activePlayers.map((p) => Number(p.avgDamage ?? 0)))
-    : 0;
+    const worstKda = tablePlayers.length
+      ? Math.min(...tablePlayers.map((p) => Number(p.kda ?? 0)))
+      : 0;
 
-  const bestDeaths = activePlayers.length
-    ? Math.max(...activePlayers.map((p) => Number(p.avgDeaths ?? 0)))
-    : 0;
+    const bestDamage = tablePlayers.length
+      ? Math.max(...tablePlayers.map((p) => Number(p.avgDamage ?? 0)))
+      : 0;
 
-  const worstDeaths = activePlayers.length
-    ? Math.min(...activePlayers.map((p) => Number(p.avgDeaths ?? 0)))
-    : 0;
+    const worstDamage = tablePlayers.length
+      ? Math.min(...tablePlayers.map((p) => Number(p.avgDamage ?? 0)))
+      : 0;
 
-  const bestTopKillsGame = activePlayers.length
-    ? Math.max(...activePlayers.map((p) => Number(p.topKillsGame ?? 0)))
-    : 0;
+    const bestDeaths = tablePlayers.length
+      ? Math.max(...tablePlayers.map((p) => Number(p.avgDeaths ?? 0)))
+      : 0;
 
-  const worstTopDeathsGame = activePlayers.length
-    ? Math.max(...activePlayers.map((p) => Number(p.topDeathsGame ?? 0)))
-    : 0;
+    const worstDeaths = tablePlayers.length
+      ? Math.min(...tablePlayers.map((p) => Number(p.avgDeaths ?? 0)))
+      : 0;
+
+    const bestTopKillsGame = tablePlayers.length
+      ? Math.max(...tablePlayers.map((p) => Number(p.topKillsGame ?? 0)))
+      : 0;
+
+    const worstTopDeathsGame = tablePlayers.length
+      ? Math.max(...tablePlayers.map((p) => Number(p.topDeathsGame ?? 0)))
+      : 0;
+
+    return (
+      <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
+        <table className="w-full min-w-[1350px] text-left text-sm">
+          <thead className="bg-zinc-900 text-zinc-300">
+            <tr>
+              <th className="px-3 py-3">#</th>
+              <th className="px-3 py-3">Spiller</th>
+              <th className="px-3 py-3">Role</th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("score")}
+              >
+                Flex Rank {sortArrow("score")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("wins")}
+              >
+                Tracked W/L {sortArrow("wins")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("winrate")}
+              >
+                Tracked WR {sortArrow("winrate")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("trackedGames")}
+              >
+                Games {sortArrow("trackedGames")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("overallScore")}
+              >
+                Overall {sortArrow("overallScore")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("kda")}
+              >
+                KDA {sortArrow("kda")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("avgKills")}
+              >
+                Avg kills {sortArrow("avgKills")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("avgDeaths")}
+              >
+                Avg deaths {sortArrow("avgDeaths")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("avgAssists")}
+              >
+                Avg assists {sortArrow("avgAssists")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("topKillsGame")}
+              >
+                Top kills {sortArrow("topKillsGame")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("topDeathsGame")}
+              >
+                Top deaths {sortArrow("topDeathsGame")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("highestWinStreak")}
+              >
+                Winstreak {sortArrow("highestWinStreak")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("pentakills")}
+              >
+                Pentas {sortArrow("pentakills")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("avgDamage")}
+              >
+                Damage {sortArrow("avgDamage")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("avgCsMin")}
+              >
+                CS/min {sortArrow("avgCsMin")}
+              </th>
+
+              <th
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort("avgVision")}
+              >
+                Vision {sortArrow("avgVision")}
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {tablePlayers.map((p, index) => (
+              <tr
+                key={`${p.name}-${p.gameName}-${index}`}
+                className="border-t border-zinc-800 hover:bg-zinc-900/60"
+              >
+                <td className="p-4 text-xl font-bold">{index + 1}</td>
+
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-2 text-lg font-bold">
+                    <span>{p.name}</span>
+
+                    {Number(p.currentWinStreak ?? 0) > 2 && (
+                      <div
+                        title={`${p.currentWinStreak} win streak`}
+                        className="relative flex h-7 w-7 items-center justify-center"
+                      >
+                        <img
+                          src="/emojis/Flame.png"
+                          alt="Flame"
+                          className="h-7 w-7 object-contain"
+                        />
+                        <span
+                          className="absolute mt-1 text-[18px] font-black text-white"
+                          style={{
+                            textShadow: `
+                              0 0 2px black,
+                              0 0 4px black,
+                              1px 1px 0 black,
+                              -1px -1px 0 black,
+                              1px -1px 0 black,
+                              -1px 1px 0 black
+                            `,
+                          }}
+                        >
+                          {p.currentWinStreak}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-sm text-zinc-500">
+                    {p.gameName}#{p.tagLine}
+                  </div>
+                </td>
+
+                <td className="px-3 py-3">
+                  <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-sm">
+                    {p.mainRole} / {p.secondRole}
+                  </span>
+                </td>
+
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-3">
+                    {rankIcon(p.tier) && (
+                      <img
+                        src={rankIcon(p.tier)!}
+                        alt={p.tier}
+                        className="h-10 w-10 min-w-10 object-contain"
+                      />
+                    )}
+
+                    <span
+                      className={`rounded-full border px-3 py-1 font-bold ${rankColor(
+                        p.tier
+                      )}`}
+                    >
+                      {p.tier} {p.rank} {p.lp} LP
+                    </span>
+                  </div>
+                </td>
+
+                <td className="px-3 py-3">
+                  {p.wins}W / {p.losses}L
+                </td>
+
+                <td
+                  className={`p-4 ${statColor(
+                    p.winrate,
+                    bestWinrate,
+                    worstWinrate
+                  )}`}
+                >
+                  {p.winrate}%
+                </td>
+
+                <td className="px-3 py-3">{p.trackedGames}</td>
+
+                <td className="p-4 font-bold text-purple-400">
+                  {p.overallScore ?? 0}
+                </td>
+
+                <td className={`p-4 ${statColor(p.kda, bestKda, worstKda)}`}>
+                  {p.kda}
+                </td>
+
+                <td className="p-4 text-green-400">{p.avgKills}</td>
+
+                <td
+                  className={`p-4 ${statColor(
+                    p.avgDeaths,
+                    bestDeaths,
+                    worstDeaths,
+                    true
+                  )}`}
+                >
+                  {p.avgDeaths}
+                </td>
+
+                <td className="p-4 text-sky-400">{p.avgAssists}</td>
+
+                <td
+                  className={`p-4 ${statColor(
+                    p.topKillsGame,
+                    bestTopKillsGame,
+                    0
+                  )}`}
+                >
+                  {p.topKillsGame ?? 0}
+                </td>
+
+                <td
+                  className={`p-4 ${statColor(
+                    p.topDeathsGame,
+                    worstTopDeathsGame,
+                    0,
+                    true
+                  )}`}
+                >
+                  {p.topDeathsGame ?? 0}
+                </td>
+
+                <td className="p-4 font-bold text-yellow-300">
+                  {p.highestWinStreak ?? 0}
+                </td>
+
+                <td className="p-4 font-bold text-purple-400">
+                  {p.pentakills ?? 0}
+                </td>
+
+                <td
+                  className={`p-4 ${statColor(
+                    p.avgDamage,
+                    bestDamage,
+                    worstDamage
+                  )}`}
+                >
+                  {(p.avgDamage ?? 0).toLocaleString()}
+                </td>
+
+                <td className="p-4">{p.avgCsMin}</td>
+                <td className="p-4">{p.avgVision}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 
   const overallBest = getLeader(awardPlayers, "overallScore", true);
   const topDamage = getLeader(awardPlayers, "avgDamage", true);
@@ -324,8 +618,7 @@ export default function Home() {
 
       {activePlayers.length === 0 ? (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
-          Ingen recorded games endnu. Spillere kommer først på leaderboardet,
-          når de har mindst ét tracked game.
+          Ingen recorded games endnu.
         </div>
       ) : (
         <>
@@ -333,110 +626,38 @@ export default function Home() {
             <>
               {weeklyAwards ? (
                 <>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="rounded-2xl border border-yellow-400/30 bg-yellow-400/10 p-6 text-yellow-300">
-                      <div className="text-sm opacity-80">Ugens spiller</div>
-                      <div className="mt-1 text-3xl font-black">
-                        {weeklyAwards.overallWinner?.name ?? "-"}
-                      </div>
-                      <div className="mt-1 text-zinc-300">
-                        {weeklyAwards.overallWinner?.overallScore ?? 0} overall
-                        score
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-emerald-400">
-                      <div className="text-sm opacity-80">Mest improved</div>
-                      <div className="mt-1 text-3xl font-black">
-                        {weeklyAwards.improvedWinner?.name ?? "-"}
-                      </div>
-                      <div className="mt-1 text-zinc-300">
-                        +{weeklyAwards.improvedWinner?.improvement ?? 0} score
-                        siden sidste uge
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">
-                      <div className="text-sm opacity-80">Ugens int</div>
-                      <div className="mt-1 text-3xl font-black">
-                        {weeklyAwards.intWinner?.name ?? "-"}
-                      </div>
-                      <div className="mt-1 text-zinc-300">
-                        {weeklyAwards.intWinner?.topDeathsThisWeek ?? 0} deaths
-                        i ét game
-                      </div>
-                    </div>
+                  <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <AwardCard
+                      title="Ugens spiller"
+                      player={{ name: weeklyAwards.overallWinner?.name ?? "-" }}
+                      value={`${weeklyAwards.overallWinner?.overallScore ?? 0} score`}
+                      tone="yellow"
+                    />
+                    <AwardCard
+                      title="Mest improved"
+                      player={{ name: weeklyAwards.improvedWinner?.name ?? "-" }}
+                      value={`+${weeklyAwards.improvedWinner?.improvement ?? 0} score`}
+                      tone="green"
+                    />
+                    <AwardCard
+                      title="Ugens int"
+                      player={{ name: weeklyAwards.intWinner?.name ?? "-" }}
+                      value={`${weeklyAwards.intWinner?.topDeathsThisWeek ?? 0} deaths i ét game`}
+                      tone="red"
+                    />
                   </div>
 
-                  <div className="mt-8 overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
-                    <table className="w-full min-w-[900px] text-left text-sm">
-                      <thead className="bg-zinc-900 text-zinc-300">
-                        <tr>
-                          <th className="p-4">Award</th>
-                          <th className="p-4">Spiller</th>
-                          <th className="p-4">Resultat</th>
-                          <th className="p-4">Krav</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        <tr className="border-t border-zinc-800">
-                          <td className="p-4 font-bold text-yellow-300">
-                            Ugens spiller
-                          </td>
-                          <td className="p-4">
-                            {weeklyAwards.overallWinner?.name ?? "-"}
-                          </td>
-                          <td className="p-4">
-                            {weeklyAwards.overallWinner?.overallScore ?? 0}{" "}
-                            overall score
-                          </td>
-                          <td className="p-4 text-zinc-500">
-                            Min. {weeklyAwards.minGamesSinceLastFriday ?? 5}{" "}
-                            games siden fredag
-                          </td>
-                        </tr>
-
-                        <tr className="border-t border-zinc-800">
-                          <td className="p-4 font-bold text-emerald-400">
-                            Mest improved
-                          </td>
-                          <td className="p-4">
-                            {weeklyAwards.improvedWinner?.name ?? "-"}
-                          </td>
-                          <td className="p-4">
-                            +{weeklyAwards.improvedWinner?.improvement ?? 0}{" "}
-                            score
-                          </td>
-                          <td className="p-4 text-zinc-500">
-                            Min. {weeklyAwards.minGamesSinceLastFriday ?? 5}{" "}
-                            games siden fredag
-                          </td>
-                        </tr>
-
-                        <tr className="border-t border-zinc-800">
-                          <td className="p-4 font-bold text-red-400">
-                            Ugens int
-                          </td>
-                          <td className="p-4">
-                            {weeklyAwards.intWinner?.name ?? "-"}
-                          </td>
-                          <td className="p-4">
-                            {weeklyAwards.intWinner?.topDeathsThisWeek ?? 0}{" "}
-                            deaths i ét game
-                          </td>
-                          <td className="p-4 text-zinc-500">
-                            Min. {weeklyAwards.minGamesSinceLastFriday ?? 5}{" "}
-                            games siden fredag
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                  {sortedWeeklyPlayers.length > 0 ? (
+                    renderLeaderboardTable(sortedWeeklyPlayers)
+                  ) : (
+                    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
+                      Ingen weekly games endnu.
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
-                  Ingen weekly awards endnu. De bliver låst fredag efter refresh.
+                  Ingen weekly awards endnu.
                 </div>
               )}
             </>
@@ -501,296 +722,7 @@ export default function Home() {
                 />
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
-                <table className="w-full min-w-[1350px] text-left text-sm">
-                  <thead className="bg-zinc-900 text-zinc-300">
-                    <tr>
-                      <th className="px-3 py-3">#</th>
-                      <th className="px-3 py-3">Spiller</th>
-                      <th className="px-3 py-3">Role</th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("score")}
-                      >
-                        Flex Rank {sortArrow("score")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("wins")}
-                      >
-                        Tracked W/L {sortArrow("wins")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("winrate")}
-                      >
-                        Tracked WR {sortArrow("winrate")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("trackedGames")}
-                      >
-                        Games {sortArrow("trackedGames")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("overallScore")}
-                      >
-                        Overall {sortArrow("overallScore")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("kda")}
-                      >
-                        KDA {sortArrow("kda")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("avgKills")}
-                      >
-                        Avg kills {sortArrow("avgKills")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("avgDeaths")}
-                      >
-                        Avg deaths {sortArrow("avgDeaths")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("avgAssists")}
-                      >
-                        Avg assists {sortArrow("avgAssists")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("topKillsGame")}
-                      >
-                        Top kills {sortArrow("topKillsGame")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("topDeathsGame")}
-                      >
-                        Top deaths {sortArrow("topDeathsGame")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("highestWinStreak")}
-                      >
-                        Winstreak {sortArrow("highestWinStreak")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("pentakills")}
-                      >
-                        Pentas {sortArrow("pentakills")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("avgDamage")}
-                      >
-                        Damage {sortArrow("avgDamage")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("avgCsMin")}
-                      >
-                        CS/min {sortArrow("avgCsMin")}
-                      </th>
-
-                      <th
-                        className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                        onClick={() => handleSort("avgVision")}
-                      >
-                        Vision {sortArrow("avgVision")}
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {sortedPlayers.map((p, index) => (
-                      <tr
-                        key={`${p.name}-${p.gameName}`}
-                        className="border-t border-zinc-800 hover:bg-zinc-900/60"
-                      >
-                        <td className="p-4 text-xl font-bold">{index + 1}</td>
-
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-2 text-lg font-bold">
-                            <span>{p.name}</span>
-
-                            {Number(p.currentWinStreak ?? 0) > 2 && (
-                              <div
-                                title={`${p.currentWinStreak} win streak`}
-                                className="relative flex h-7 w-7 items-center justify-center"
-                              >
-                                <img
-                                  src="/emojis/Flame.png"
-                                  alt="Flame"
-                                  className="h-7 w-7 object-contain"
-                                />
-                                <span
-                                  className="absolute mt-1 text-[18px] font-black text-white"
-                                  style={{
-                                    textShadow: `
-                                      0 0 2px black,
-                                      0 0 4px black,
-                                      1px 1px 0 black,
-                                      -1px -1px 0 black,
-                                      1px -1px 0 black,
-                                      -1px 1px 0 black
-                                    `,
-                                  }}
-                                >
-                                  {p.currentWinStreak}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="text-sm text-zinc-500">
-                            {p.gameName}#{p.tagLine}
-                          </div>
-                        </td>
-
-                        <td className="px-3 py-3">
-                          <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-sm">
-                            {p.mainRole} / {p.secondRole}
-                          </span>
-                        </td>
-
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-3">
-                            {rankIcon(p.tier) && (
-                              <img
-                                src={rankIcon(p.tier)!}
-                                alt={p.tier}
-                                className="h-10 w-10 min-w-10 object-contain"
-                              />
-                            )}
-
-                            <span
-                              className={`rounded-full border px-3 py-1 font-bold ${rankColor(
-                                p.tier
-                              )}`}
-                            >
-                              {p.tier} {p.rank} {p.lp} LP
-                            </span>
-                          </div>
-                        </td>
-
-                        <td className="px-3 py-3">
-                          {p.wins}W / {p.losses}L
-                        </td>
-
-                        <td
-                          className={`p-4 ${statColor(
-                            p.winrate,
-                            bestWinrate,
-                            worstWinrate
-                          )}`}
-                        >
-                          {p.winrate}%
-                        </td>
-
-                        <td className="px-3 py-3">{p.trackedGames}</td>
-
-                        <td className="p-4 font-bold text-purple-400">
-                          {p.overallScore ?? 0}
-                        </td>
-
-                        <td
-                          className={`p-4 ${statColor(
-                            p.kda,
-                            bestKda,
-                            worstKda
-                          )}`}
-                        >
-                          {p.kda}
-                        </td>
-
-                        <td className="p-4 text-green-400">{p.avgKills}</td>
-
-                        <td
-                          className={`p-4 ${statColor(
-                            p.avgDeaths,
-                            bestDeaths,
-                            worstDeaths,
-                            true
-                          )}`}
-                        >
-                          {p.avgDeaths}
-                        </td>
-
-                        <td className="p-4 text-sky-400">{p.avgAssists}</td>
-
-                        <td
-                          className={`p-4 ${statColor(
-                            p.topKillsGame,
-                            bestTopKillsGame,
-                            0
-                          )}`}
-                        >
-                          {p.topKillsGame ?? 0}
-                        </td>
-
-                        <td
-                          className={`p-4 ${statColor(
-                            p.topDeathsGame,
-                            worstTopDeathsGame,
-                            0,
-                            true
-                          )}`}
-                        >
-                          {p.topDeathsGame ?? 0}
-                        </td>
-
-                        <td className="p-4 font-bold text-yellow-300">
-                          {p.highestWinStreak ?? 0}
-                        </td>
-
-                        <td className="p-4 font-bold text-purple-400">
-                          {p.pentakills ?? 0}
-                        </td>
-
-                        <td
-                          className={`p-4 ${statColor(
-                            p.avgDamage,
-                            bestDamage,
-                            worstDamage
-                          )}`}
-                        >
-                          {(p.avgDamage ?? 0).toLocaleString()}
-                        </td>
-
-                        <td className="p-4">{p.avgCsMin}</td>
-                        <td className="p-4">{p.avgVision}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <p className="mt-4 text-sm text-zinc-500">
-                Klik på kolonneoverskrifterne for at sortere. Spillere uden
-                recorded games vises ikke endnu.
-              </p>
+              {renderLeaderboardTable(sortedPlayers)}
 
               <div className="mt-10 space-y-6">
                 {activePlayers.map((p) => (
