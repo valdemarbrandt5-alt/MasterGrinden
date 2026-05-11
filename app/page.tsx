@@ -103,6 +103,7 @@ function AwardCard({
 
 export default function Home() {
   const [players, setPlayers] = useState<any[]>([]);
+  const [weeklyAwards, setWeeklyAwards] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [openPlayers, setOpenPlayers] = useState<Record<string, boolean>>({});
@@ -137,6 +138,19 @@ export default function Home() {
     }
   }
 
+  async function loadWeeklyAwards() {
+    try {
+      const res = await fetch("/api/weekly-awards", {
+        cache: "no-store",
+      });
+
+      const data = await res.json();
+      setWeeklyAwards(data);
+    } catch {
+      setWeeklyAwards(null);
+    }
+  }
+
   async function refreshData() {
     try {
       setLoading(true);
@@ -156,6 +170,7 @@ export default function Home() {
       if (Array.isArray(data)) {
         setPlayers(data);
         setMessage("Stats opdateret.");
+        loadWeeklyAwards();
       } else {
         setMessage("Refresh gav forkert data tilbage.");
       }
@@ -187,6 +202,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
+    loadWeeklyAwards();
   }, []);
 
   const activePlayers = players.filter((p) => Number(p.trackedGames ?? 0) > 0);
@@ -284,6 +300,31 @@ export default function Home() {
         </div>
       ) : (
         <>
+          {weeklyAwards && (
+            <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-yellow-400/30 bg-yellow-400/10 p-6 text-yellow-300">
+                <div className="text-sm opacity-80">Ugens spiller</div>
+                <div className="mt-1 text-3xl font-black">
+                  {weeklyAwards.overallWinner?.name ?? "-"}
+                </div>
+                <div className="mt-1 text-zinc-300">
+                  {weeklyAwards.overallWinner?.overallScore ?? 0} overall score
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-emerald-400">
+                <div className="text-sm opacity-80">Mest improved</div>
+                <div className="mt-1 text-3xl font-black">
+                  {weeklyAwards.improvedWinner?.name ?? "-"}
+                </div>
+                <div className="mt-1 text-zinc-300">
+                  +{weeklyAwards.improvedWinner?.improvement ?? 0} score siden
+                  sidste uge
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-9">
             <AwardCard
               title="Overall bedste"
@@ -348,112 +389,96 @@ export default function Home() {
                   <th className="px-3 py-3">#</th>
                   <th className="px-3 py-3">Spiller</th>
                   <th className="px-3 py-3">Role</th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("score")}
                   >
                     Flex Rank {sortArrow("score")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("wins")}
                   >
                     Tracked W/L {sortArrow("wins")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("winrate")}
                   >
                     Tracked WR {sortArrow("winrate")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("trackedGames")}
                   >
                     Games {sortArrow("trackedGames")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("overallScore")}
                   >
                     Overall {sortArrow("overallScore")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("kda")}
                   >
                     KDA {sortArrow("kda")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgKills")}
                   >
                     Avg kills {sortArrow("avgKills")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgDeaths")}
                   >
                     Avg deaths {sortArrow("avgDeaths")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgAssists")}
                   >
                     Avg assists {sortArrow("avgAssists")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("topKillsGame")}
                   >
                     Top kills {sortArrow("topKillsGame")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("topDeathsGame")}
                   >
                     Top deaths {sortArrow("topDeathsGame")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("highestWinStreak")}
                   >
                     Winstreak {sortArrow("highestWinStreak")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("pentakills")}
                   >
                     Pentas {sortArrow("pentakills")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgDamage")}
                   >
                     Damage {sortArrow("avgDamage")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgCsMin")}
                   >
                     CS/min {sortArrow("avgCsMin")}
                   </th>
-
                   <th
                     className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
                     onClick={() => handleSort("avgVision")}
@@ -474,33 +499,34 @@ export default function Home() {
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2 text-lg font-bold">
                         <span>{p.name}</span>
+
                         {Number(p.currentWinStreak ?? 0) > 2 && (
-  <div
-    title={`${p.currentWinStreak} win streak`}
-    className="relative flex h-7 w-7 items-center justify-center"
-  >
-    <img
-      src="/emojis/Flame.png"
-      alt="Flame"
-      className="h-7 w-7 object-contain"
-    />
-    <span
-  className="absolute mt-1 text-[18px] font-black text-white"
-  style={{
-    textShadow: `
-      0 0 2px black,
-      0 0 4px black,
-      1px 1px 0 black,
-      -1px -1px 0 black,
-      1px -1px 0 black,
-      -1px 1px 0 black
-    `,
-  }}
->
-  {p.currentWinStreak}
-</span>
-  </div>
-)}
+                          <div
+                            title={`${p.currentWinStreak} win streak`}
+                            className="relative flex h-7 w-7 items-center justify-center"
+                          >
+                            <img
+                              src="/emojis/Flame.png"
+                              alt="Flame"
+                              className="h-7 w-7 object-contain"
+                            />
+                            <span
+                              className="absolute mt-1 text-[18px] font-black text-white"
+                              style={{
+                                textShadow: `
+                                  0 0 2px black,
+                                  0 0 4px black,
+                                  1px 1px 0 black,
+                                  -1px -1px 0 black,
+                                  1px -1px 0 black,
+                                  -1px 1px 0 black
+                                `,
+                              }}
+                            >
+                              {p.currentWinStreak}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="text-sm text-zinc-500">
