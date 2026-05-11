@@ -4,27 +4,40 @@ const WEEKLY_ID = "main";
 const MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY = 5;
 
 function getCopenhagenWeekKey(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Copenhagen",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
+  const copenhagenDate = new Date(
+    date.toLocaleString("en-US", {
+      timeZone: "Europe/Copenhagen",
+    })
+  );
 
-  const year = parts.find((p) => p.type === "year")?.value;
-  const month = parts.find((p) => p.type === "month")?.value;
-  const day = parts.find((p) => p.type === "day")?.value;
+  const day = copenhagenDate.getDay();
+  const daysSinceFriday = (day + 2) % 7;
 
-  return `${year}-${month}-${day}`;
+  copenhagenDate.setDate(copenhagenDate.getDate() - daysSinceFriday);
+  copenhagenDate.setHours(18, 0, 0, 0);
+
+  if (date.getTime() < copenhagenDate.getTime()) {
+    copenhagenDate.setDate(copenhagenDate.getDate() - 7);
+  }
+
+  const year = copenhagenDate.getFullYear();
+  const month = String(copenhagenDate.getMonth() + 1).padStart(2, "0");
+  const dayOfMonth = String(copenhagenDate.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${dayOfMonth}-18`;
 }
 
-function isFridayCopenhagen(date = new Date()) {
-  const weekday = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Europe/Copenhagen",
-    weekday: "short",
-  }).format(date);
+function isFridayAfter18Copenhagen(date = new Date()) {
+  const copenhagenDate = new Date(
+    date.toLocaleString("en-US", {
+      timeZone: "Europe/Copenhagen",
+    })
+  );
 
-  return weekday === "Fri";
+  const day = copenhagenDate.getDay();
+  const hour = copenhagenDate.getHours();
+
+  return day === 5 && hour >= 18;
 }
 
 export async function readWeeklyAwards() {
@@ -43,14 +56,8 @@ export async function readWeeklyAwards() {
 }
 
 export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
-  // Sæt disse to tilbage når du er færdig med at teste:
-  // if (!isFridayCopenhagen()) return;
-
   const oldAwards = await readWeeklyAwards();
   const weekKey = getCopenhagenWeekKey();
-
-  // Sæt denne tilbage når du er færdig med at teste:
-  // if (oldAwards?.weekKey === weekKey) return;
 
   const weeklyPlayers = leaderboard
     .filter((p: any) => Number(p.weekly?.games ?? 0) > 0)
@@ -98,79 +105,84 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
     };
   }
 
-  if (!eligiblePlayers.length) {
-    const { error } = await supabase.from("weekly_awards").upsert({
-      id: WEEKLY_ID,
-      data: {
-        weekKey,
-        minGamesSinceLastFriday: MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY,
-        updatedAt: new Date().toISOString(),
-        overallWinner: null,
-        improvedWinner: null,
-        intWinner: null,
-        weeklyPlayers,
-        snapshot,
-      },
-      updated_at: new Date().toISOString(),
-    });
+  const shouldCreateNewLockedAwards =
+    isFridayAfter18Copenhagen() && oldAwards?.weekKey !== weekKey;
 
-    if (error) {
-      console.log("WEEKLY AWARDS SAVE ERROR:", error.message);
-    }
+  const shouldKeepOldAwards =
+    oldAwards &&
+    oldAwards.weekKey === weekKey &&
+    oldAwards.overallWinner &&
+    oldAwards.improvedWinner &&
+    oldAwards.intWinner;
 
-    return;
+  let overallWinner = oldAwards?.overallWinner ?? null;
+  let improvedWinner = oldAwards?.improvedWinner ?? null;
+  let intWinner = oldAwards?.intWinner ?? null;
+
+  if (shouldCreateNewLockedAwards && eligiblePlayers.length > 0) {
+    const calculatedOverallWinner = [...eligiblePlayers].sort(
+      (a, b) => Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0)
+    )[0];
+
+    const oldSnapshot = oldAwards?.snapshot ?? {};
+
+    const calculatedImprovedWinner = [...eligiblePlayers]
+      .map((p: any) => {
+        const oldScore = Number(
+          oldSnapshot[p.name]?.overallScore ?? p.overallScore ?? 0
+        );
+        const newScore = Number(p.overallScore ?? 0);
+
+        return {
+          ...p,
+          improvement: Number((newScore - oldScore).toFixed(1)),
+          oldScore,
+          newScore,
+        };
+      })
+      .sort(
+        (a, b) => Number(b.improvement ?? 0) - Number(a.improvement ?? 0)
+      )[0];
+
+    const calculatedIntWinner = [...eligiblePlayers].sort(
+      (a, b) => Number(b.topDeathsGame ?? 0) - Number(a.topDeathsGame ?? 0)
+    )[0];
+
+    overallWinner = {
+      name: calculatedOverallWinner.name,
+      overallScore: calculatedOverallWinner.overallScore ?? 0,
+      trackedGames: calculatedOverallWinner.trackedGames ?? 0,
+    };
+
+    improvedWinner = {
+      name: calculatedImprovedWinner.name,
+      improvement: calculatedImprovedWinner.improvement ?? 0,
+      oldScore: calculatedImprovedWinner.oldScore ?? 0,
+      newScore: calculatedImprovedWinner.newScore ?? 0,
+      trackedGames: calculatedImprovedWinner.trackedGames ?? 0,
+    };
+
+    intWinner = {
+      name: calculatedIntWinner.name,
+      topDeathsThisWeek: calculatedIntWinner.topDeathsGame ?? 0,
+      trackedGames: calculatedIntWinner.trackedGames ?? 0,
+    };
   }
 
-  const overallWinner = [...eligiblePlayers].sort(
-    (a, b) => Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0)
-  )[0];
-
-  const oldSnapshot = oldAwards?.snapshot ?? {};
-
-  const improvedWinner = [...eligiblePlayers]
-    .map((p: any) => {
-      const oldScore = Number(
-        oldSnapshot[p.name]?.overallScore ?? p.overallScore ?? 0
-      );
-      const newScore = Number(p.overallScore ?? 0);
-
-      return {
-        ...p,
-        improvement: Number((newScore - oldScore).toFixed(1)),
-        oldScore,
-        newScore,
-      };
-    })
-    .sort((a, b) => Number(b.improvement ?? 0) - Number(a.improvement ?? 0))[0];
-
-  const intWinner = [...eligiblePlayers].sort(
-    (a, b) => Number(b.topDeathsGame ?? 0) - Number(a.topDeathsGame ?? 0)
-  )[0];
+  if (!shouldCreateNewLockedAwards && shouldKeepOldAwards) {
+    overallWinner = oldAwards.overallWinner;
+    improvedWinner = oldAwards.improvedWinner;
+    intWinner = oldAwards.intWinner;
+  }
 
   const weeklyData = {
     weekKey,
     minGamesSinceLastFriday: MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY,
     updatedAt: new Date().toISOString(),
 
-    overallWinner: {
-      name: overallWinner.name,
-      overallScore: overallWinner.overallScore ?? 0,
-      trackedGames: overallWinner.trackedGames ?? 0,
-    },
-
-    improvedWinner: {
-      name: improvedWinner.name,
-      improvement: improvedWinner.improvement ?? 0,
-      oldScore: improvedWinner.oldScore ?? 0,
-      newScore: improvedWinner.newScore ?? 0,
-      trackedGames: improvedWinner.trackedGames ?? 0,
-    },
-
-    intWinner: {
-      name: intWinner.name,
-      topDeathsThisWeek: intWinner.topDeathsGame ?? 0,
-      trackedGames: intWinner.trackedGames ?? 0,
-    },
+    overallWinner,
+    improvedWinner,
+    intWinner,
 
     weeklyPlayers,
     snapshot,

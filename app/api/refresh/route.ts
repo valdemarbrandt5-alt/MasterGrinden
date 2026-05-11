@@ -87,7 +87,11 @@ function getLastFridayTimestamp() {
   const daysSinceFriday = (day + 2) % 7;
 
   copenhagenNow.setDate(copenhagenNow.getDate() - daysSinceFriday);
-  copenhagenNow.setHours(0, 0, 0, 0);
+  copenhagenNow.setHours(18, 0, 0, 0);
+
+  if (now.getTime() < copenhagenNow.getTime()) {
+    copenhagenNow.setDate(copenhagenNow.getDate() - 7);
+  }
 
   return Math.floor(copenhagenNow.getTime() / 1000);
 }
