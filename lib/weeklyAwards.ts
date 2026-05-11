@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
 const WEEKLY_ID = "main";
+const MIN_GAMES_FOR_WEEKLY_AWARD = 5;
 
 function getCopenhagenWeekKey(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -42,28 +43,34 @@ export async function readWeeklyAwards() {
 }
 
 export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
-  //if (!isFridayCopenhagen()) return;
+  // Slå denne til igen når du er færdig med at teste
+  // if (!isFridayCopenhagen()) return;
 
   const oldAwards = await readWeeklyAwards();
   const weekKey = getCopenhagenWeekKey();
 
   if (oldAwards?.weekKey === weekKey) return;
 
-  const activePlayers = leaderboard.filter(
-    (p) => Number(p.trackedGames ?? 0) > 4
+  const eligiblePlayers = leaderboard.filter(
+    (p: any) => Number(p.trackedGames ?? 0) >= MIN_GAMES_FOR_WEEKLY_AWARD
   );
 
-  if (!activePlayers.length) return;
+  if (!eligiblePlayers.length) {
+    console.log("NO WEEKLY AWARD ELIGIBLE PLAYERS");
+    return;
+  }
 
-  const overallWinner = [...activePlayers].sort(
+  const overallWinner = [...eligiblePlayers].sort(
     (a, b) => Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0)
   )[0];
 
   const oldSnapshot = oldAwards?.snapshot ?? {};
 
-  const improvedWinner = [...activePlayers]
+  const improvedWinner = [...eligiblePlayers]
     .map((p) => {
-      const oldScore = Number(oldSnapshot[p.name]?.overallScore ?? p.overallScore ?? 0);
+      const oldScore = Number(
+        oldSnapshot[p.name]?.overallScore ?? p.overallScore ?? 0
+      );
       const newScore = Number(p.overallScore ?? 0);
 
       return {
@@ -77,7 +84,7 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
 
   const snapshot: Record<string, any> = {};
 
-  for (const p of activePlayers) {
+  for (const p of eligiblePlayers) {
     snapshot[p.name] = {
       overallScore: Number(p.overallScore ?? 0),
       trackedGames: Number(p.trackedGames ?? 0),
@@ -88,6 +95,7 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
 
   const weeklyData = {
     weekKey,
+    minGamesRequired: MIN_GAMES_FOR_WEEKLY_AWARD,
     updatedAt: new Date().toISOString(),
     overallWinner: {
       name: overallWinner.name,
