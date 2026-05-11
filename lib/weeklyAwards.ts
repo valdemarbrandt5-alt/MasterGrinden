@@ -50,40 +50,70 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
 
   if (oldAwards?.weekKey === weekKey) return;
 
-  const oldSnapshot = oldAwards?.snapshot ?? {};
+  const weeklyPlayers = leaderboard
+    .filter((p: any) => Number(p.weekly?.games ?? 0) > 0)
+    .map((p: any) => ({
+      ...p,
+      trackedGames: Number(p.weekly.games ?? 0),
+      wins: Number(p.weekly.wins ?? 0),
+      losses: Number(p.weekly.losses ?? 0),
+      winrate: Number(p.weekly.winrate ?? 0),
+      overallScore: Number(p.weekly.overallScore ?? 0),
+      kda: Number(p.weekly.kda ?? 0),
+      avgKills: Number(p.weekly.avgKills ?? 0),
+      avgDeaths: Number(p.weekly.avgDeaths ?? 0),
+      avgAssists: Number(p.weekly.avgAssists ?? 0),
+      avgDamage: Number(p.weekly.avgDamage ?? 0),
+      avgCsMin: Number(p.weekly.avgCsMin ?? 0),
+      avgVision: Number(p.weekly.avgVision ?? 0),
+      topKillsGame: Number(p.weekly.topKillsGame ?? 0),
+      topDeathsGame: Number(p.weekly.topDeathsGame ?? 0),
+      pentakills: Number(p.weekly.pentakills ?? 0),
+    }))
+    .sort((a: any, b: any) => Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0));
 
-  const eligiblePlayers = leaderboard
-    .filter((p: any) => Number(p.trackedGames ?? 0) > 0)
-    .map((p: any) => {
-      const oldGames = Number(oldSnapshot[p.name]?.trackedGames ?? 0);
-      const newGames = Number(p.trackedGames ?? 0);
-
-      const oldDeathsTotal = Number(oldSnapshot[p.name]?.deathsTotal ?? 0);
-      const newDeathsTotal = Number(p.avgDeaths ?? 0) * newGames;
-
-      const gamesSinceLastFriday = newGames - oldGames;
-      const deathsSinceLastFriday = newDeathsTotal - oldDeathsTotal;
-
-      const weeklyDeathsPerGame =
-        gamesSinceLastFriday > 0
-          ? Number((deathsSinceLastFriday / gamesSinceLastFriday).toFixed(2))
-          : 0;
-
-      return {
-        ...p,
-        gamesSinceLastFriday,
-        deathsSinceLastFriday,
-        weeklyDeathsPerGame,
-      };
-    })
-    .filter(
-      (p: any) =>
-        Number(p.gamesSinceLastFriday ?? 0) >=
-        MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY
-    );
+  const eligiblePlayers = weeklyPlayers.filter(
+    (p: any) =>
+      Number(p.trackedGames ?? 0) >= MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY
+  );
 
   if (!eligiblePlayers.length) {
     console.log("NO WEEKLY AWARD ELIGIBLE PLAYERS");
+
+    const snapshot: Record<string, any> = {};
+
+    for (const p of leaderboard) {
+      snapshot[p.name] = {
+        overallScore: Number(p.overallScore ?? 0),
+        trackedGames: Number(p.trackedGames ?? 0),
+        winrate: Number(p.winrate ?? 0),
+        kda: Number(p.kda ?? 0),
+        avgDeaths: Number(p.avgDeaths ?? 0),
+        deathsTotal: Number(
+          (Number(p.avgDeaths ?? 0) * Number(p.trackedGames ?? 0)).toFixed(2)
+        ),
+      };
+    }
+
+    const { error } = await supabase.from("weekly_awards").upsert({
+      id: WEEKLY_ID,
+      data: {
+        weekKey,
+        minGamesSinceLastFriday: MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY,
+        updatedAt: new Date().toISOString(),
+        overallWinner: null,
+        improvedWinner: null,
+        intWinner: null,
+        weeklyPlayers,
+        snapshot,
+      },
+      updated_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      console.log("WEEKLY AWARDS SAVE ERROR:", error.message);
+    }
+
     return;
   }
 
@@ -91,10 +121,12 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
     (a, b) => Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0)
   )[0];
 
+  const oldAwardsSnapshot = oldAwards?.snapshot ?? {};
+
   const improvedWinner = [...eligiblePlayers]
     .map((p: any) => {
       const oldScore = Number(
-        oldSnapshot[p.name]?.overallScore ?? p.overallScore ?? 0
+        oldAwardsSnapshot[p.name]?.overallScore ?? p.overallScore ?? 0
       );
       const newScore = Number(p.overallScore ?? 0);
 
@@ -108,9 +140,7 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
     .sort((a, b) => Number(b.improvement ?? 0) - Number(a.improvement ?? 0))[0];
 
   const intWinner = [...eligiblePlayers].sort(
-    (a, b) =>
-      Number(b.weeklyDeathsPerGame ?? 0) -
-      Number(a.weeklyDeathsPerGame ?? 0)
+    (a, b) => Number(b.topDeathsGame ?? 0) - Number(a.topDeathsGame ?? 0)
   )[0];
 
   const snapshot: Record<string, any> = {};
@@ -138,7 +168,6 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
       name: overallWinner.name,
       overallScore: overallWinner.overallScore ?? 0,
       trackedGames: overallWinner.trackedGames ?? 0,
-      gamesSinceLastFriday: overallWinner.gamesSinceLastFriday ?? 0,
     },
 
     improvedWinner: {
@@ -146,40 +175,18 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
       improvement: improvedWinner.improvement ?? 0,
       oldScore: improvedWinner.oldScore ?? 0,
       newScore: improvedWinner.newScore ?? 0,
-      gamesSinceLastFriday: improvedWinner.gamesSinceLastFriday ?? 0,
+      trackedGames: improvedWinner.trackedGames ?? 0,
     },
 
     intWinner: {
       name: intWinner.name,
-      weeklyDeathsPerGame: intWinner.weeklyDeathsPerGame ?? 0,
-      deathsSinceLastFriday: Number(
-        (intWinner.deathsSinceLastFriday ?? 0).toFixed(1)
-      ),
-      gamesSinceLastFriday: intWinner.gamesSinceLastFriday ?? 0,
+      topDeathsThisWeek: intWinner.topDeathsGame ?? 0,
+      trackedGames: intWinner.trackedGames ?? 0,
     },
 
+    weeklyPlayers,
     snapshot,
   };
-  const weeklyPlayers = leaderboard
-  .filter((p: any) => Number(p.weekly?.games ?? 0) > 0)
-  .map((p: any) => ({
-    ...p,
-    trackedGames: p.weekly.games,
-    wins: p.weekly.wins,
-    losses: p.weekly.losses,
-    winrate: p.weekly.winrate,
-    overallScore: p.weekly.overallScore,
-    kda: p.weekly.kda,
-    avgKills: p.weekly.avgKills,
-    avgDeaths: p.weekly.avgDeaths,
-    avgAssists: p.weekly.avgAssists,
-    avgDamage: p.weekly.avgDamage,
-    avgCsMin: p.weekly.avgCsMin,
-    avgVision: p.weekly.avgVision,
-    topKillsGame: p.weekly.topKillsGame,
-    topDeathsGame: p.weekly.topDeathsGame,
-    pentakills: p.weekly.pentakills,
-  }));
 
   const { error } = await supabase.from("weekly_awards").upsert({
     id: WEEKLY_ID,
