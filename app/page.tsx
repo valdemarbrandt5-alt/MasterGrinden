@@ -332,40 +332,108 @@ export default function Home() {
           {activeTab === "weekly" && (
             <>
               {weeklyAwards ? (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <div className="rounded-2xl border border-yellow-400/30 bg-yellow-400/10 p-6 text-yellow-300">
-                    <div className="text-sm opacity-80">Ugens spiller</div>
-                    <div className="mt-1 text-3xl font-black">
-                      {weeklyAwards.overallWinner?.name ?? "-"}
+                <>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="rounded-2xl border border-yellow-400/30 bg-yellow-400/10 p-6 text-yellow-300">
+                      <div className="text-sm opacity-80">Ugens spiller</div>
+                      <div className="mt-1 text-3xl font-black">
+                        {weeklyAwards.overallWinner?.name ?? "-"}
+                      </div>
+                      <div className="mt-1 text-zinc-300">
+                        {weeklyAwards.overallWinner?.overallScore ?? 0} overall
+                        score
+                      </div>
                     </div>
-                    <div className="mt-1 text-zinc-300">
-                      {weeklyAwards.overallWinner?.overallScore ?? 0} overall
-                      score
+
+                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-emerald-400">
+                      <div className="text-sm opacity-80">Mest improved</div>
+                      <div className="mt-1 text-3xl font-black">
+                        {weeklyAwards.improvedWinner?.name ?? "-"}
+                      </div>
+                      <div className="mt-1 text-zinc-300">
+                        +{weeklyAwards.improvedWinner?.improvement ?? 0} score
+                        siden sidste uge
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">
+                      <div className="text-sm opacity-80">Ugens int</div>
+                      <div className="mt-1 text-3xl font-black">
+                        {weeklyAwards.intWinner?.name ?? "-"}
+                      </div>
+                      <div className="mt-1 text-zinc-300">
+                        {weeklyAwards.intWinner?.topDeathsThisWeek ?? 0} deaths
+                        i ét game
+                      </div>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-emerald-400">
-                    <div className="text-sm opacity-80">Mest improved</div>
-                    <div className="mt-1 text-3xl font-black">
-                      {weeklyAwards.improvedWinner?.name ?? "-"}
-                    </div>
-                    <div className="mt-1 text-zinc-300">
-                      +{weeklyAwards.improvedWinner?.improvement ?? 0} score
-                      siden sidste uge
-                    </div>
-                  </div>
+                  <div className="mt-8 overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
+                    <table className="w-full min-w-[900px] text-left text-sm">
+                      <thead className="bg-zinc-900 text-zinc-300">
+                        <tr>
+                          <th className="p-4">Award</th>
+                          <th className="p-4">Spiller</th>
+                          <th className="p-4">Resultat</th>
+                          <th className="p-4">Krav</th>
+                        </tr>
+                      </thead>
 
-                  <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">
-                    <div className="text-sm opacity-80">Ugens int</div>
-                    <div className="mt-1 text-3xl font-black">
-                      {weeklyAwards.intWinner?.name ?? "-"}
-                    </div>
-                    <div className="mt-1 text-zinc-300">
-                      {weeklyAwards.intWinner?.topDeathsThisWeek ?? 0} deaths i
-                      ét game
-                    </div>
+                      <tbody>
+                        <tr className="border-t border-zinc-800">
+                          <td className="p-4 font-bold text-yellow-300">
+                            Ugens spiller
+                          </td>
+                          <td className="p-4">
+                            {weeklyAwards.overallWinner?.name ?? "-"}
+                          </td>
+                          <td className="p-4">
+                            {weeklyAwards.overallWinner?.overallScore ?? 0}{" "}
+                            overall score
+                          </td>
+                          <td className="p-4 text-zinc-500">
+                            Min. {weeklyAwards.minGamesSinceLastFriday ?? 5}{" "}
+                            games siden fredag
+                          </td>
+                        </tr>
+
+                        <tr className="border-t border-zinc-800">
+                          <td className="p-4 font-bold text-emerald-400">
+                            Mest improved
+                          </td>
+                          <td className="p-4">
+                            {weeklyAwards.improvedWinner?.name ?? "-"}
+                          </td>
+                          <td className="p-4">
+                            +{weeklyAwards.improvedWinner?.improvement ?? 0}{" "}
+                            score
+                          </td>
+                          <td className="p-4 text-zinc-500">
+                            Min. {weeklyAwards.minGamesSinceLastFriday ?? 5}{" "}
+                            games siden fredag
+                          </td>
+                        </tr>
+
+                        <tr className="border-t border-zinc-800">
+                          <td className="p-4 font-bold text-red-400">
+                            Ugens int
+                          </td>
+                          <td className="p-4">
+                            {weeklyAwards.intWinner?.name ?? "-"}
+                          </td>
+                          <td className="p-4">
+                            {weeklyAwards.intWinner?.topDeathsThisWeek ?? 0}{" "}
+                            deaths i ét game
+                          </td>
+                          <td className="p-4 text-zinc-500">
+                            Min. {weeklyAwards.minGamesSinceLastFriday ?? 5}{" "}
+                            games siden fredag
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                </div>
+                </>
               ) : (
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
                   Ingen weekly awards endnu. De bliver låst fredag efter refresh.
