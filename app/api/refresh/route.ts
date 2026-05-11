@@ -5,6 +5,7 @@ import { getAccount, getRankByPuuid, getFlexMatchIds } from "@/lib/riot";
 import { getCachedMatch, getAllCachedMatches } from "@/lib/matchCache";
 import { acquireRefreshLock, releaseRefreshLock } from "@/lib/refreshLock";
 import { TRACKING_START_TIME } from "@/lib/trackerSettings";
+import { updateWeeklyAwardsIfNeeded } from "@/lib/weeklyAwards";
 
 function rankValue(tier: string, rank: string, lp: number) {
   const tiers: Record<string, number> = {
@@ -417,7 +418,9 @@ for (const player of players) {
 
     await saveLeaderboard(data);
 
-    return NextResponse.json(data);
+await updateWeeklyAwardsIfNeeded(data);
+
+return NextResponse.json(data);
   } finally {
     await releaseRefreshLock();
   }
