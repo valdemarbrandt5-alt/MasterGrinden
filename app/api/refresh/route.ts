@@ -73,6 +73,7 @@ function getStatAccounts(player: any) {
     },
   ];
 }
+
 function getLastFridayTimestamp() {
   const now = new Date();
 
@@ -83,7 +84,6 @@ function getLastFridayTimestamp() {
   );
 
   const day = copenhagenNow.getDay();
-
   const daysSinceFriday = (day + 2) % 7;
 
   copenhagenNow.setDate(copenhagenNow.getDate() - daysSinceFriday);
@@ -91,6 +91,119 @@ function getLastFridayTimestamp() {
 
   return Math.floor(copenhagenNow.getTime() / 1000);
 }
+
+function calculateStats(matches: any[], statPuuids: string[]) {
+  const performances = matches
+    .map((match: any) =>
+      match.info.participants.find((p: any) => statPuuids.includes(p.puuid))
+    )
+    .filter(Boolean);
+
+  const games = performances.length;
+
+  const wins = performances.filter((p: any) => p.win).length;
+  const losses = games - wins;
+  const winrate = games > 0 ? Math.round((wins / games) * 100) : 0;
+
+  const kills = performances.reduce((sum: number, p: any) => sum + p.kills, 0);
+  const deaths = performances.reduce(
+    (sum: number, p: any) => sum + p.deaths,
+    0
+  );
+  const assists = performances.reduce(
+    (sum: number, p: any) => sum + p.assists,
+    0
+  );
+  const damage = performances.reduce(
+    (sum: number, p: any) => sum + p.totalDamageDealtToChampions,
+    0
+  );
+  const vision = performances.reduce(
+    (sum: number, p: any) => sum + p.visionScore,
+    0
+  );
+  const cs = performances.reduce(
+    (sum: number, p: any) =>
+      sum + p.totalMinionsKilled + p.neutralMinionsKilled,
+    0
+  );
+  const minutes = matches.reduce(
+    (sum: number, match: any) => sum + match.info.gameDuration / 60,
+    0
+  );
+
+  const kda =
+    games > 0
+      ? deaths > 0
+        ? Number(((kills + assists) / deaths).toFixed(2))
+        : kills + assists
+      : 0;
+
+  const avgKills = games > 0 ? Number((kills / games).toFixed(1)) : 0;
+  const avgDeaths = games > 0 ? Number((deaths / games).toFixed(1)) : 0;
+  const avgAssists = games > 0 ? Number((assists / games).toFixed(1)) : 0;
+  const avgDamage = games > 0 ? Math.round(damage / games) : 0;
+  const avgCsMin =
+    games > 0 && minutes > 0 ? Number((cs / minutes).toFixed(1)) : 0;
+  const avgVision = games > 0 ? Number((vision / games).toFixed(1)) : 0;
+
+  const topKillsGame =
+    games > 0 ? Math.max(...performances.map((p: any) => p.kills)) : 0;
+
+  const topDeathsGame =
+    games > 0 ? Math.max(...performances.map((p: any) => p.deaths)) : 0;
+
+  const pentakills = performances.reduce(
+    (sum: number, p: any) => sum + (p.pentaKills ?? 0),
+    0
+  );
+
+  const matchScores = matches
+    .map((match: any) => {
+      const playerStats = match.info.participants.find((p: any) =>
+        statPuuids.includes(p.puuid)
+      );
+
+      if (!playerStats) return null;
+
+      const gameMinutes = match.info.gameDuration / 60;
+      const matchCs =
+        playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+
+      return buildMatchScore(playerStats, gameMinutes, matchCs);
+    })
+    .filter((score: number | null) => score !== null);
+
+  const overallScore =
+    matchScores.length > 0
+      ? Number(
+          (
+            matchScores.reduce((sum: number, score: any) => sum + score, 0) /
+            matchScores.length
+          ).toFixed(1)
+        )
+      : 0;
+
+  return {
+    games,
+    wins,
+    losses,
+    winrate,
+    kda,
+    avgKills,
+    avgDeaths,
+    avgAssists,
+    avgDamage,
+    avgCsMin,
+    avgVision,
+    topKillsGame,
+    topDeathsGame,
+    pentakills,
+    overallScore,
+    performances,
+  };
+}
+
 export async function POST() {
   const hasLock = await acquireRefreshLock();
 
@@ -138,21 +251,26 @@ export async function POST() {
     const allMatches = await getAllCachedMatches();
     const allTrackedPuuids: string[] = [];
 
-for (const player of players) {
-  const statAccounts = getStatAccounts(player);
+    for (const player of players) {
+      const statAccounts = getStatAccounts(player);
 
-  for (const statAccount of statAccounts) {
-    try {
-      const account = await getAccount(statAccount.gameName, statAccount.tagLine);
+      for (const statAccount of statAccounts) {
+        try {
+          const account = await getAccount(
+            statAccount.gameName,
+            statAccount.tagLine
+          );
 
-      if (!allTrackedPuuids.includes(account.puuid)) {
-        allTrackedPuuids.push(account.puuid);
+          if (!allTrackedPuuids.includes(account.puuid)) {
+            allTrackedPuuids.push(account.puuid);
+          }
+        } catch (error: any) {
+          console.log("GLOBAL PUUID FETCH ERROR:", player.name, error.message);
+        }
       }
-    } catch (error: any) {
-      console.log("GLOBAL PUUID FETCH ERROR:", player.name, error.message);
     }
-  }
-}
+
+    const weeklyStartTimestamp = getLastFridayTimestamp();
 
     for (const player of players) {
       const oldPlayer = findOldPlayer(oldLeaderboard, player);
@@ -199,125 +317,50 @@ for (const player of players) {
             );
           }
         }
-const weeklyStartTimestamp = getLastFridayTimestamp();
+
         const trackedMatches = allMatches.filter((match: any) => {
-  if (!match?.info?.participants) return false;
-const isWeeklyMatch =
-  Math.floor(match.info.gameCreation / 1000) >=
-  weeklyStartTimestamp;
-  const isAfterReset =
-    Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
+          if (!match?.info?.participants) return false;
 
-  const hasAnyStatAccount = match.info.participants.some((p: any) =>
-    statPuuids.includes(p.puuid)
-  );
+          const isAfterReset =
+            Math.floor(match.info.gameCreation / 1000) >= TRACKING_START_TIME;
 
-  const trackedPlayersInMatch = match.info.participants.filter((p: any) =>
-    allTrackedPuuids.includes(p.puuid)
-  ).length;
+          const hasAnyStatAccount = match.info.participants.some((p: any) =>
+            statPuuids.includes(p.puuid)
+          );
 
-  const isPremadeGame = trackedPlayersInMatch >= 2;
+          const trackedPlayersInMatch = match.info.participants.filter(
+            (p: any) => allTrackedPuuids.includes(p.puuid)
+          ).length;
 
-  const gameMinutes = (match.info.gameDuration ?? 0) / 60;
-  const isRealGame = gameMinutes >= 5;
+          const isPremadeGame = trackedPlayersInMatch >= 2;
 
-  return (
-  isAfterReset &&
-  hasAnyStatAccount &&
-  isRealGame &&
-  isPremadeGame &&
-  isWeeklyMatch
-);
-});
+          const gameMinutes = (match.info.gameDuration ?? 0) / 60;
+          const isRealGame = gameMinutes >= 5;
+
+          return isAfterReset && hasAnyStatAccount && isRealGame && isPremadeGame;
+        });
+
+        const weeklyMatches = trackedMatches.filter((match: any) => {
+          return Math.floor(match.info.gameCreation / 1000) >= weeklyStartTimestamp;
+        });
 
         const sortedTrackedMatches = [...trackedMatches].sort(
           (a: any, b: any) => getMatchTimestamp(a) - getMatchTimestamp(b)
         );
 
-        const performances = trackedMatches
-          .map((match: any) =>
-            match.info.participants.find((p: any) =>
-              statPuuids.includes(p.puuid)
-            )
-          )
-          .filter(Boolean);
-
-        const sortedPerformances = sortedTrackedMatches
-          .map((match: any) =>
-            match.info.participants.find((p: any) =>
-              statPuuids.includes(p.puuid)
-            )
-          )
-          .filter(Boolean);
-
-        const games = performances.length;
-
-        const trackedWins = performances.filter((p: any) => p.win).length;
-        const trackedLosses = games - trackedWins;
-        const trackedWinrate =
-          games > 0 ? Math.round((trackedWins / games) * 100) : 0;
-
-        const kills = performances.reduce(
-          (sum: number, p: any) => sum + p.kills,
-          0
-        );
-
-        const deaths = performances.reduce(
-          (sum: number, p: any) => sum + p.deaths,
-          0
-        );
-
-        const assists = performances.reduce(
-          (sum: number, p: any) => sum + p.assists,
-          0
-        );
-
-        const damage = performances.reduce(
-          (sum: number, p: any) => sum + p.totalDamageDealtToChampions,
-          0
-        );
-
-        const vision = performances.reduce(
-          (sum: number, p: any) => sum + p.visionScore,
-          0
-        );
-
-        const cs = performances.reduce(
-          (sum: number, p: any) =>
-            sum + p.totalMinionsKilled + p.neutralMinionsKilled,
-          0
-        );
-
-        const minutes = trackedMatches.reduce(
-          (sum: number, match: any) => sum + match.info.gameDuration / 60,
-          0
-        );
-
-        const kda =
-          games > 0
-            ? deaths > 0
-              ? Number(((kills + assists) / deaths).toFixed(2))
-              : kills + assists
-            : 0;
-
-        const avgKills = games > 0 ? Number((kills / games).toFixed(1)) : 0;
-        const avgDeaths = games > 0 ? Number((deaths / games).toFixed(1)) : 0;
-        const avgAssists = games > 0 ? Number((assists / games).toFixed(1)) : 0;
-        const avgDamage = games > 0 ? Math.round(damage / games) : 0;
-        const avgCsMin =
-          games > 0 && minutes > 0 ? Number((cs / minutes).toFixed(1)) : 0;
-        const avgVision = games > 0 ? Number((vision / games).toFixed(1)) : 0;
-
-        const topKillsGame =
-          games > 0 ? Math.max(...performances.map((p: any) => p.kills)) : 0;
-
-        const topDeathsGame =
-          games > 0 ? Math.max(...performances.map((p: any) => p.deaths)) : 0;
+        const stats = calculateStats(trackedMatches, statPuuids);
+        const weeklyStats = calculateStats(weeklyMatches, statPuuids);
 
         let currentWinStreak = 0;
         let highestWinStreak = 0;
 
-        for (const performance of sortedPerformances) {
+        for (const performance of sortedTrackedMatches
+          .map((match: any) =>
+            match.info.participants.find((p: any) =>
+              statPuuids.includes(p.puuid)
+            )
+          )
+          .filter(Boolean)) {
           if (performance.win) {
             currentWinStreak += 1;
             highestWinStreak = Math.max(highestWinStreak, currentWinStreak);
@@ -325,11 +368,6 @@ const isWeeklyMatch =
             currentWinStreak = 0;
           }
         }
-
-        const pentakills = performances.reduce(
-          (sum: number, p: any) => sum + (p.pentaKills ?? 0),
-          0
-        );
 
         const recentMatches = [...trackedMatches]
           .sort((a: any, b: any) => getMatchTimestamp(b) - getMatchTimestamp(a))
@@ -362,42 +400,49 @@ const isWeeklyMatch =
           })
           .filter(Boolean);
 
-        const overallScore =
-          recentMatches.length > 0
-            ? Number(
-                (
-                  recentMatches.reduce(
-                    (sum: number, match: any) => sum + (match.matchScore ?? 0),
-                    0
-                  ) / recentMatches.length
-                ).toFixed(1)
-              )
-            : 0;
-
         data.push({
           ...player,
           tier,
           rank,
           lp,
-          wins: trackedWins,
-          losses: trackedLosses,
-          winrate: trackedWinrate,
+          wins: stats.wins,
+          losses: stats.losses,
+          winrate: stats.winrate,
           score,
-          trackedGames: games,
+          trackedGames: stats.games,
           recentMatches,
-          kda,
-          avgKills,
-          avgDeaths,
-          avgAssists,
-          avgDamage,
-          avgCsMin,
-          avgVision,
-          topKillsGame,
-          topDeathsGame,
+          kda: stats.kda,
+          avgKills: stats.avgKills,
+          avgDeaths: stats.avgDeaths,
+          avgAssists: stats.avgAssists,
+          avgDamage: stats.avgDamage,
+          avgCsMin: stats.avgCsMin,
+          avgVision: stats.avgVision,
+          topKillsGame: stats.topKillsGame,
+          topDeathsGame: stats.topDeathsGame,
           currentWinStreak,
           highestWinStreak,
-          pentakills,
-          overallScore,
+          pentakills: stats.pentakills,
+          overallScore: stats.overallScore,
+
+          weekly: {
+            games: weeklyStats.games,
+            wins: weeklyStats.wins,
+            losses: weeklyStats.losses,
+            winrate: weeklyStats.winrate,
+            kda: weeklyStats.kda,
+            avgKills: weeklyStats.avgKills,
+            avgDeaths: weeklyStats.avgDeaths,
+            avgAssists: weeklyStats.avgAssists,
+            avgDamage: weeklyStats.avgDamage,
+            avgCsMin: weeklyStats.avgCsMin,
+            avgVision: weeklyStats.avgVision,
+            topKillsGame: weeklyStats.topKillsGame,
+            topDeathsGame: weeklyStats.topDeathsGame,
+            pentakills: weeklyStats.pentakills,
+            overallScore: weeklyStats.overallScore,
+          },
+
           error: rankFetchError
             ? "Rank endpoint failed. Using last known rank."
             : undefined,
@@ -433,6 +478,23 @@ const isWeeklyMatch =
             highestWinStreak: 0,
             pentakills: 0,
             overallScore: 0,
+            weekly: {
+              games: 0,
+              wins: 0,
+              losses: 0,
+              winrate: 0,
+              kda: 0,
+              avgKills: 0,
+              avgDeaths: 0,
+              avgAssists: 0,
+              avgDamage: 0,
+              avgCsMin: 0,
+              avgVision: 0,
+              topKillsGame: 0,
+              topDeathsGame: 0,
+              pentakills: 0,
+              overallScore: 0,
+            },
             error: error.message,
           });
         }
@@ -443,9 +505,9 @@ const isWeeklyMatch =
 
     await saveLeaderboard(data);
 
-await updateWeeklyAwardsIfNeeded(data);
+    await updateWeeklyAwardsIfNeeded(data);
 
-return NextResponse.json(data);
+    return NextResponse.json(data);
   } finally {
     await releaseRefreshLock();
   }

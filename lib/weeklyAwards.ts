@@ -160,6 +160,26 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
 
     snapshot,
   };
+  const weeklyPlayers = leaderboard
+  .filter((p: any) => Number(p.weekly?.games ?? 0) > 0)
+  .map((p: any) => ({
+    ...p,
+    trackedGames: p.weekly.games,
+    wins: p.weekly.wins,
+    losses: p.weekly.losses,
+    winrate: p.weekly.winrate,
+    overallScore: p.weekly.overallScore,
+    kda: p.weekly.kda,
+    avgKills: p.weekly.avgKills,
+    avgDeaths: p.weekly.avgDeaths,
+    avgAssists: p.weekly.avgAssists,
+    avgDamage: p.weekly.avgDamage,
+    avgCsMin: p.weekly.avgCsMin,
+    avgVision: p.weekly.avgVision,
+    topKillsGame: p.weekly.topKillsGame,
+    topDeathsGame: p.weekly.topDeathsGame,
+    pentakills: p.weekly.pentakills,
+  }));
 
   const { error } = await supabase.from("weekly_awards").upsert({
     id: WEEKLY_ID,
