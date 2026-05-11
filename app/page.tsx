@@ -101,6 +101,257 @@ function AwardCard({
   );
 }
 
+function LeaderboardTable({
+  players,
+  sortKey,
+  sortDirection,
+  handleSort,
+  sortArrow,
+}: {
+  players: any[];
+  sortKey: string;
+  sortDirection: "asc" | "desc";
+  handleSort: (key: string) => void;
+  sortArrow: (column: string) => string;
+}) {
+  const bestWinrate = players.length
+    ? Math.max(...players.map((p) => Number(p.winrate ?? 0)))
+    : 0;
+
+  const worstWinrate = players.length
+    ? Math.min(...players.map((p) => Number(p.winrate ?? 0)))
+    : 0;
+
+  const bestKda = players.length
+    ? Math.max(...players.map((p) => Number(p.kda ?? 0)))
+    : 0;
+
+  const worstKda = players.length
+    ? Math.min(...players.map((p) => Number(p.kda ?? 0)))
+    : 0;
+
+  const bestDamage = players.length
+    ? Math.max(...players.map((p) => Number(p.avgDamage ?? 0)))
+    : 0;
+
+  const worstDamage = players.length
+    ? Math.min(...players.map((p) => Number(p.avgDamage ?? 0)))
+    : 0;
+
+  const bestDeaths = players.length
+    ? Math.max(...players.map((p) => Number(p.avgDeaths ?? 0)))
+    : 0;
+
+  const worstDeaths = players.length
+    ? Math.min(...players.map((p) => Number(p.avgDeaths ?? 0)))
+    : 0;
+
+  const bestTopKillsGame = players.length
+    ? Math.max(...players.map((p) => Number(p.topKillsGame ?? 0)))
+    : 0;
+
+  const worstTopDeathsGame = players.length
+    ? Math.max(...players.map((p) => Number(p.topDeathsGame ?? 0)))
+    : 0;
+
+  return (
+    <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
+      <table className="w-full min-w-[1350px] text-left text-sm">
+        <thead className="bg-zinc-900 text-zinc-300">
+          <tr>
+            <th className="px-3 py-3">#</th>
+            <th className="px-3 py-3">Spiller</th>
+            <th className="px-3 py-3">Role</th>
+
+            {[
+              ["score", "Flex Rank"],
+              ["wins", "Tracked W/L"],
+              ["winrate", "Tracked WR"],
+              ["trackedGames", "Games"],
+              ["overallScore", "Overall"],
+              ["kda", "KDA"],
+              ["avgKills", "Avg kills"],
+              ["avgDeaths", "Avg deaths"],
+              ["avgAssists", "Avg assists"],
+              ["topKillsGame", "Top kills"],
+              ["topDeathsGame", "Top deaths"],
+              ["highestWinStreak", "Winstreak"],
+              ["pentakills", "Pentas"],
+              ["avgDamage", "Damage"],
+              ["avgCsMin", "CS/min"],
+              ["avgVision", "Vision"],
+            ].map(([key, label]) => (
+              <th
+                key={key}
+                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
+                onClick={() => handleSort(key)}
+              >
+                {label} {sortArrow(key)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {players.map((p, index) => (
+            <tr
+              key={`${p.name}-${p.gameName}-${index}`}
+              className="border-t border-zinc-800 hover:bg-zinc-900/60"
+            >
+              <td className="p-4 text-xl font-bold">{index + 1}</td>
+
+              <td className="px-3 py-3">
+                <div className="flex items-center gap-2 text-lg font-bold">
+                  <span>{p.name}</span>
+
+                  {Number(p.currentWinStreak ?? 0) > 2 && (
+                    <div
+                      title={`${p.currentWinStreak} win streak`}
+                      className="relative flex h-7 w-7 items-center justify-center"
+                    >
+                      <img
+                        src="/emojis/Flame.png"
+                        alt="Flame"
+                        className="h-7 w-7 object-contain"
+                      />
+                      <span
+                        className="absolute mt-1 text-[18px] font-black text-white"
+                        style={{
+                          textShadow: `
+                            0 0 2px black,
+                            0 0 4px black,
+                            1px 1px 0 black,
+                            -1px -1px 0 black,
+                            1px -1px 0 black,
+                            -1px 1px 0 black
+                          `,
+                        }}
+                      >
+                        {p.currentWinStreak}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-sm text-zinc-500">
+                  {p.gameName}#{p.tagLine}
+                </div>
+              </td>
+
+              <td className="px-3 py-3">
+                <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-sm">
+                  {p.mainRole} / {p.secondRole}
+                </span>
+              </td>
+
+              <td className="px-3 py-3">
+                <div className="flex items-center gap-3">
+                  {rankIcon(p.tier) && (
+                    <img
+                      src={rankIcon(p.tier)!}
+                      alt={p.tier}
+                      className="h-10 w-10 min-w-10 object-contain"
+                    />
+                  )}
+
+                  <span
+                    className={`rounded-full border px-3 py-1 font-bold ${rankColor(
+                      p.tier
+                    )}`}
+                  >
+                    {p.tier} {p.rank} {p.lp} LP
+                  </span>
+                </div>
+              </td>
+
+              <td className="px-3 py-3">
+                {p.wins}W / {p.losses}L
+              </td>
+
+              <td
+                className={`p-4 ${statColor(
+                  p.winrate,
+                  bestWinrate,
+                  worstWinrate
+                )}`}
+              >
+                {p.winrate}%
+              </td>
+
+              <td className="px-3 py-3">{p.trackedGames}</td>
+
+              <td className="p-4 font-bold text-purple-400">
+                {p.overallScore ?? 0}
+              </td>
+
+              <td className={`p-4 ${statColor(p.kda, bestKda, worstKda)}`}>
+                {p.kda}
+              </td>
+
+              <td className="p-4 text-green-400">{p.avgKills}</td>
+
+              <td
+                className={`p-4 ${statColor(
+                  p.avgDeaths,
+                  bestDeaths,
+                  worstDeaths,
+                  true
+                )}`}
+              >
+                {p.avgDeaths}
+              </td>
+
+              <td className="p-4 text-sky-400">{p.avgAssists}</td>
+
+              <td
+                className={`p-4 ${statColor(
+                  p.topKillsGame,
+                  bestTopKillsGame,
+                  0
+                )}`}
+              >
+                {p.topKillsGame ?? 0}
+              </td>
+
+              <td
+                className={`p-4 ${statColor(
+                  p.topDeathsGame,
+                  worstTopDeathsGame,
+                  0,
+                  true
+                )}`}
+              >
+                {p.topDeathsGame ?? 0}
+              </td>
+
+              <td className="p-4 font-bold text-yellow-300">
+                {p.highestWinStreak ?? 0}
+              </td>
+
+              <td className="p-4 font-bold text-purple-400">
+                {p.pentakills ?? 0}
+              </td>
+
+              <td
+                className={`p-4 ${statColor(
+                  p.avgDamage,
+                  bestDamage,
+                  worstDamage
+                )}`}
+              >
+                {(p.avgDamage ?? 0).toLocaleString()}
+              </td>
+
+              <td className="p-4">{p.avgCsMin}</td>
+              <td className="p-4">{p.avgVision}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function Home() {
   const [players, setPlayers] = useState<any[]>([]);
   const [weeklyAwards, setWeeklyAwards] = useState<any>(null);
@@ -112,19 +363,9 @@ export default function Home() {
   const [sortKey, setSortKey] = useState("score");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  function togglePlayer(name: string) {
-    setOpenPlayers((prev) => ({
-      ...prev,
-      [name]: !prev[name],
-    }));
-  }
-
   async function loadData() {
     try {
-      const res = await fetch("/api/leaderboard", {
-        cache: "no-store",
-      });
-
+      const res = await fetch("/api/leaderboard", { cache: "no-store" });
       const data = await res.json();
 
       if (Array.isArray(data)) {
@@ -141,10 +382,7 @@ export default function Home() {
 
   async function loadWeeklyAwards() {
     try {
-      const res = await fetch("/api/weekly-awards", {
-        cache: "no-store",
-      });
-
+      const res = await fetch("/api/weekly-awards", { cache: "no-store" });
       const data = await res.json();
       setWeeklyAwards(data);
     } catch {
@@ -157,10 +395,7 @@ export default function Home() {
       setLoading(true);
       setMessage("Opdaterer stats...");
 
-      const res = await fetch("/api/refresh", {
-        method: "POST",
-      });
-
+      const res = await fetch("/api/refresh", { method: "POST" });
       const data = await res.json();
 
       if (!res.ok) {
@@ -180,6 +415,13 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function togglePlayer(name: string) {
+    setOpenPlayers((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
   }
 
   function handleSort(key: string) {
@@ -206,15 +448,15 @@ export default function Home() {
     loadWeeklyAwards();
   }, []);
 
-  const activePlayers = players.filter((p) => Number(p.trackedGames ?? 0) > 0);
-
-  const awardPlayers = activePlayers.filter(
-    (p) => Number(p.trackedGames ?? 0) >= 5
-  );
-
+  const activePlayers = players.filter(
+  (p: any) => Number(p.trackedGames ?? 0) > 0
+);
   const weeklyPlayers = weeklyAwards?.weeklyPlayers ?? [];
 
-  const sortedPlayers = [...activePlayers].sort((a, b) => {
+  const currentPlayers =
+    activeTab === "weekly" ? weeklyPlayers : activePlayers;
+
+  const sortedPlayers = [...currentPlayers].sort((a: any, b: any) => {
     const av = Number(a[sortKey] ?? 0);
     const bv = Number(b[sortKey] ?? 0);
 
@@ -222,337 +464,9 @@ export default function Home() {
     return av - bv;
   });
 
-  const sortedWeeklyPlayers = [...weeklyPlayers].sort((a, b) => {
-    const av = Number(a[sortKey] ?? 0);
-    const bv = Number(b[sortKey] ?? 0);
-
-    if (sortDirection === "desc") return bv - av;
-    return av - bv;
-  });
-
-  function renderLeaderboardTable(tablePlayers: any[]) {
-    const bestWinrate = tablePlayers.length
-      ? Math.max(...tablePlayers.map((p) => Number(p.winrate ?? 0)))
-      : 0;
-
-    const worstWinrate = tablePlayers.length
-      ? Math.min(...tablePlayers.map((p) => Number(p.winrate ?? 0)))
-      : 0;
-
-    const bestKda = tablePlayers.length
-      ? Math.max(...tablePlayers.map((p) => Number(p.kda ?? 0)))
-      : 0;
-
-    const worstKda = tablePlayers.length
-      ? Math.min(...tablePlayers.map((p) => Number(p.kda ?? 0)))
-      : 0;
-
-    const bestDamage = tablePlayers.length
-      ? Math.max(...tablePlayers.map((p) => Number(p.avgDamage ?? 0)))
-      : 0;
-
-    const worstDamage = tablePlayers.length
-      ? Math.min(...tablePlayers.map((p) => Number(p.avgDamage ?? 0)))
-      : 0;
-
-    const bestDeaths = tablePlayers.length
-      ? Math.max(...tablePlayers.map((p) => Number(p.avgDeaths ?? 0)))
-      : 0;
-
-    const worstDeaths = tablePlayers.length
-      ? Math.min(...tablePlayers.map((p) => Number(p.avgDeaths ?? 0)))
-      : 0;
-
-    const bestTopKillsGame = tablePlayers.length
-      ? Math.max(...tablePlayers.map((p) => Number(p.topKillsGame ?? 0)))
-      : 0;
-
-    const worstTopDeathsGame = tablePlayers.length
-      ? Math.max(...tablePlayers.map((p) => Number(p.topDeathsGame ?? 0)))
-      : 0;
-
-    return (
-      <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
-        <table className="w-full min-w-[1350px] text-left text-sm">
-          <thead className="bg-zinc-900 text-zinc-300">
-            <tr>
-              <th className="px-3 py-3">#</th>
-              <th className="px-3 py-3">Spiller</th>
-              <th className="px-3 py-3">Role</th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("score")}
-              >
-                Flex Rank {sortArrow("score")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("wins")}
-              >
-                Tracked W/L {sortArrow("wins")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("winrate")}
-              >
-                Tracked WR {sortArrow("winrate")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("trackedGames")}
-              >
-                Games {sortArrow("trackedGames")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("overallScore")}
-              >
-                Overall {sortArrow("overallScore")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("kda")}
-              >
-                KDA {sortArrow("kda")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("avgKills")}
-              >
-                Avg kills {sortArrow("avgKills")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("avgDeaths")}
-              >
-                Avg deaths {sortArrow("avgDeaths")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("avgAssists")}
-              >
-                Avg assists {sortArrow("avgAssists")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("topKillsGame")}
-              >
-                Top kills {sortArrow("topKillsGame")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("topDeathsGame")}
-              >
-                Top deaths {sortArrow("topDeathsGame")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("highestWinStreak")}
-              >
-                Winstreak {sortArrow("highestWinStreak")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("pentakills")}
-              >
-                Pentas {sortArrow("pentakills")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("avgDamage")}
-              >
-                Damage {sortArrow("avgDamage")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("avgCsMin")}
-              >
-                CS/min {sortArrow("avgCsMin")}
-              </th>
-
-              <th
-                className="cursor-pointer whitespace-nowrap p-4 hover:text-white"
-                onClick={() => handleSort("avgVision")}
-              >
-                Vision {sortArrow("avgVision")}
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {tablePlayers.map((p, index) => (
-              <tr
-                key={`${p.name}-${p.gameName}-${index}`}
-                className="border-t border-zinc-800 hover:bg-zinc-900/60"
-              >
-                <td className="p-4 text-xl font-bold">{index + 1}</td>
-
-                <td className="px-3 py-3">
-                  <div className="flex items-center gap-2 text-lg font-bold">
-                    <span>{p.name}</span>
-
-                    {Number(p.currentWinStreak ?? 0) > 2 && (
-                      <div
-                        title={`${p.currentWinStreak} win streak`}
-                        className="relative flex h-7 w-7 items-center justify-center"
-                      >
-                        <img
-                          src="/emojis/Flame.png"
-                          alt="Flame"
-                          className="h-7 w-7 object-contain"
-                        />
-                        <span
-                          className="absolute mt-1 text-[18px] font-black text-white"
-                          style={{
-                            textShadow: `
-                              0 0 2px black,
-                              0 0 4px black,
-                              1px 1px 0 black,
-                              -1px -1px 0 black,
-                              1px -1px 0 black,
-                              -1px 1px 0 black
-                            `,
-                          }}
-                        >
-                          {p.currentWinStreak}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="text-sm text-zinc-500">
-                    {p.gameName}#{p.tagLine}
-                  </div>
-                </td>
-
-                <td className="px-3 py-3">
-                  <span className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-sm">
-                    {p.mainRole} / {p.secondRole}
-                  </span>
-                </td>
-
-                <td className="px-3 py-3">
-                  <div className="flex items-center gap-3">
-                    {rankIcon(p.tier) && (
-                      <img
-                        src={rankIcon(p.tier)!}
-                        alt={p.tier}
-                        className="h-10 w-10 min-w-10 object-contain"
-                      />
-                    )}
-
-                    <span
-                      className={`rounded-full border px-3 py-1 font-bold ${rankColor(
-                        p.tier
-                      )}`}
-                    >
-                      {p.tier} {p.rank} {p.lp} LP
-                    </span>
-                  </div>
-                </td>
-
-                <td className="px-3 py-3">
-                  {p.wins}W / {p.losses}L
-                </td>
-
-                <td
-                  className={`p-4 ${statColor(
-                    p.winrate,
-                    bestWinrate,
-                    worstWinrate
-                  )}`}
-                >
-                  {p.winrate}%
-                </td>
-
-                <td className="px-3 py-3">{p.trackedGames}</td>
-
-                <td className="p-4 font-bold text-purple-400">
-                  {p.overallScore ?? 0}
-                </td>
-
-                <td className={`p-4 ${statColor(p.kda, bestKda, worstKda)}`}>
-                  {p.kda}
-                </td>
-
-                <td className="p-4 text-green-400">{p.avgKills}</td>
-
-                <td
-                  className={`p-4 ${statColor(
-                    p.avgDeaths,
-                    bestDeaths,
-                    worstDeaths,
-                    true
-                  )}`}
-                >
-                  {p.avgDeaths}
-                </td>
-
-                <td className="p-4 text-sky-400">{p.avgAssists}</td>
-
-                <td
-                  className={`p-4 ${statColor(
-                    p.topKillsGame,
-                    bestTopKillsGame,
-                    0
-                  )}`}
-                >
-                  {p.topKillsGame ?? 0}
-                </td>
-
-                <td
-                  className={`p-4 ${statColor(
-                    p.topDeathsGame,
-                    worstTopDeathsGame,
-                    0,
-                    true
-                  )}`}
-                >
-                  {p.topDeathsGame ?? 0}
-                </td>
-
-                <td className="p-4 font-bold text-yellow-300">
-                  {p.highestWinStreak ?? 0}
-                </td>
-
-                <td className="p-4 font-bold text-purple-400">
-                  {p.pentakills ?? 0}
-                </td>
-
-                <td
-                  className={`p-4 ${statColor(
-                    p.avgDamage,
-                    bestDamage,
-                    worstDamage
-                  )}`}
-                >
-                  {(p.avgDamage ?? 0).toLocaleString()}
-                </td>
-
-                <td className="p-4">{p.avgCsMin}</td>
-                <td className="p-4">{p.avgVision}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+  const awardPlayers = currentPlayers.filter(
+  (p: any) => Number(p.trackedGames ?? 0) >= 5
+);
 
   const overallBest = getLeader(awardPlayers, "overallScore", true);
   const topDamage = getLeader(awardPlayers, "avgDamage", true);
@@ -564,10 +478,10 @@ export default function Home() {
   const topWinStreak = getLeader(awardPlayers, "highestWinStreak", true);
   const topPentakills = getLeader(awardPlayers, "pentakills", true);
 
-  const totalTrackedGames = activePlayers.reduce(
-    (sum, p) => sum + Number(p.trackedGames ?? 0),
-    0
-  );
+ const totalTrackedGames = activePlayers.reduce(
+  (sum: number, p: any) => sum + Number(p.trackedGames ?? 0),
+  0
+);
 
   return (
     <main className="min-h-screen bg-zinc-950 p-8 text-white">
@@ -616,196 +530,193 @@ export default function Home() {
         </button>
       </div>
 
-      {activePlayers.length === 0 ? (
+      {currentPlayers.length === 0 ? (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
-          Ingen recorded games endnu.
+          Ingen data endnu.
         </div>
       ) : (
         <>
-          {activeTab === "weekly" && (
-            <>
-              {weeklyAwards ? (
-                <>
-                  <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <AwardCard
-                      title="Ugens spiller"
-                      player={{ name: weeklyAwards.overallWinner?.name ?? "-" }}
-                      value={`${weeklyAwards.overallWinner?.overallScore ?? 0} score`}
-                      tone="yellow"
-                    />
-                    <AwardCard
-                      title="Mest improved"
-                      player={{ name: weeklyAwards.improvedWinner?.name ?? "-" }}
-                      value={`+${weeklyAwards.improvedWinner?.improvement ?? 0} score`}
-                      tone="green"
-                    />
-                    <AwardCard
-                      title="Ugens int"
-                      player={{ name: weeklyAwards.intWinner?.name ?? "-" }}
-                      value={`${weeklyAwards.intWinner?.topDeathsThisWeek ?? 0} deaths i ét game`}
-                      tone="red"
-                    />
-                  </div>
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-9">
+            <AwardCard
+              title={activeTab === "weekly" ? "Ugens spiller" : "Overall bedste"}
+              player={
+                activeTab === "weekly"
+                  ? { name: weeklyAwards?.overallWinner?.name ?? "-" }
+                  : overallBest
+              }
+              value={
+                activeTab === "weekly"
+                  ? `${weeklyAwards?.overallWinner?.overallScore ?? 0} score`
+                  : `${overallBest?.overallScore ?? 0} score`
+              }
+              tone="purple"
+            />
 
-                  {sortedWeeklyPlayers.length > 0 ? (
-                    renderLeaderboardTable(sortedWeeklyPlayers)
-                  ) : (
-                    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
-                      Ingen weekly games endnu.
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
-                  Ingen weekly awards endnu.
-                </div>
-              )}
-            </>
-          )}
+            <AwardCard
+              title="Top damage"
+              player={topDamage}
+              value={`${(topDamage?.avgDamage ?? 0).toLocaleString()} dmg/game`}
+              tone="green"
+            />
+
+            <AwardCard
+              title="Bedste winrate"
+              player={topWinrate}
+              value={`${topWinrate?.winrate ?? 0}%`}
+              tone="green"
+            />
+
+            <AwardCard
+              title="Bedste KDA"
+              player={topKda}
+              value={topKda?.kda ?? 0}
+              tone="blue"
+            />
+
+            <AwardCard
+              title="Flest kills i ét game"
+              player={topKillsGame}
+              value={`${topKillsGame?.topKillsGame ?? 0} kills`}
+              tone="yellow"
+            />
+
+            <AwardCard
+              title={
+                activeTab === "weekly" ? "Ugens int" : "Flest døde i ét game"
+              }
+              player={
+                activeTab === "weekly"
+                  ? { name: weeklyAwards?.intWinner?.name ?? "-" }
+                  : topDeathsGame
+              }
+              value={
+                activeTab === "weekly"
+                  ? `${weeklyAwards?.intWinner?.topDeathsThisWeek ?? 0} deaths`
+                  : `${topDeathsGame?.topDeathsGame ?? 0} deaths`
+              }
+              tone="red"
+            />
+
+            <AwardCard
+              title="Flest døde pr. game"
+              player={topDeathsPerGame}
+              value={`${topDeathsPerGame?.avgDeaths ?? 0} deaths/game`}
+              tone="red"
+            />
+
+            <AwardCard
+              title="Højeste winstreak"
+              player={topWinStreak}
+              value={`${topWinStreak?.highestWinStreak ?? 0} wins`}
+              tone="yellow"
+            />
+
+            <AwardCard
+              title={activeTab === "weekly" ? "Mest improved" : "Pentakills"}
+              player={
+                activeTab === "weekly"
+                  ? { name: weeklyAwards?.improvedWinner?.name ?? "-" }
+                  : topPentakills
+              }
+              value={
+                activeTab === "weekly"
+                  ? `+${weeklyAwards?.improvedWinner?.improvement ?? 0} score`
+                  : `${topPentakills?.pentakills ?? 0} pentas`
+              }
+              tone="purple"
+            />
+          </div>
+
+          <LeaderboardTable
+            players={sortedPlayers}
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            handleSort={handleSort}
+            sortArrow={sortArrow}
+          />
 
           {activeTab === "overall" && (
-            <>
-              <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-9">
-                <AwardCard
-                  title="Overall bedste"
-                  player={overallBest}
-                  value={`${overallBest?.overallScore ?? 0} score`}
-                  tone="purple"
-                />
-                <AwardCard
-                  title="Top damage"
-                  player={topDamage}
-                  value={`${(topDamage?.avgDamage ?? 0).toLocaleString()} dmg/game`}
-                  tone="green"
-                />
-                <AwardCard
-                  title="Bedste winrate"
-                  player={topWinrate}
-                  value={`${topWinrate?.winrate ?? 0}%`}
-                  tone="green"
-                />
-                <AwardCard
-                  title="Bedste KDA"
-                  player={topKda}
-                  value={topKda?.kda ?? 0}
-                  tone="blue"
-                />
-                <AwardCard
-                  title="Flest kills i ét game"
-                  player={topKillsGame}
-                  value={`${topKillsGame?.topKillsGame ?? 0} kills`}
-                  tone="yellow"
-                />
-                <AwardCard
-                  title="Flest døde i ét game"
-                  player={topDeathsGame}
-                  value={`${topDeathsGame?.topDeathsGame ?? 0} deaths`}
-                  tone="red"
-                />
-                <AwardCard
-                  title="Flest døde pr. game"
-                  player={topDeathsPerGame}
-                  value={`${topDeathsPerGame?.avgDeaths ?? 0} deaths/game`}
-                  tone="red"
-                />
-                <AwardCard
-                  title="Højeste winstreak"
-                  player={topWinStreak}
-                  value={`${topWinStreak?.highestWinStreak ?? 0} wins`}
-                  tone="yellow"
-                />
-                <AwardCard
-                  title="Pentakills"
-                  player={topPentakills}
-                  value={`${topPentakills?.pentakills ?? 0} pentas`}
-                  tone="purple"
-                />
-              </div>
-
-              {renderLeaderboardTable(sortedPlayers)}
-
-              <div className="mt-10 space-y-6">
-                {activePlayers.map((p) => (
+            <div className="mt-10 space-y-6">
+              {activePlayers.map((p) => (
+                <div
+                  key={`recent-${p.name}-${p.gameName}`}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
+                >
                   <div
-                    key={`recent-${p.name}-${p.gameName}`}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5"
+                    onClick={() => togglePlayer(p.name)}
+                    className="flex cursor-pointer flex-col gap-1 md:flex-row md:items-end md:justify-between"
                   >
-                    <div
-                      onClick={() => togglePlayer(p.name)}
-                      className="flex cursor-pointer flex-col gap-1 md:flex-row md:items-end md:justify-between"
-                    >
-                      <div>
-                        <h2 className="text-2xl font-bold">{p.name}</h2>
-                        <p className="text-sm text-zinc-500">
-                          Seneste tracked games
-                        </p>
-                      </div>
-
-                      <div className="text-sm text-zinc-500">
-                        {openPlayers[p.name] ? "Skjul" : "Vis"} ·{" "}
-                        {p.recentMatches?.length ?? 0} games
-                      </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">{p.name}</h2>
+                      <p className="text-sm text-zinc-500">
+                        Seneste tracked games
+                      </p>
                     </div>
 
-                    {openPlayers[p.name] && (
-                      <div className="mt-4 space-y-2">
-                        {p.recentMatches?.length > 0 ? (
-                          p.recentMatches.map((match: any, i: number) => (
-                            <div
-                              key={`${p.name}-match-${i}`}
-                              className="flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 md:flex-row md:items-center md:justify-between"
-                            >
-                              <div className="flex items-center gap-4">
-                                <span
-                                  className={`rounded-lg px-3 py-1 text-sm font-bold ${
-                                    match.win
-                                      ? "bg-emerald-500/15 text-emerald-400"
-                                      : "bg-red-500/15 text-red-400"
-                                  }`}
-                                >
-                                  {match.win ? "WIN" : "LOSS"}
-                                </span>
+                    <div className="text-sm text-zinc-500">
+                      {openPlayers[p.name] ? "Skjul" : "Vis"} ·{" "}
+                      {p.recentMatches?.length ?? 0} games
+                    </div>
+                  </div>
 
-                                <div>
-                                  <div className="font-semibold">
-                                    {match.champion}
-                                  </div>
-                                  <div className="text-sm text-zinc-500">
-                                    {match.kills}/{match.deaths}/{match.assists}
-                                  </div>
+                  {openPlayers[p.name] && (
+                    <div className="mt-4 space-y-2">
+                      {p.recentMatches?.length > 0 ? (
+                        p.recentMatches.map((match: any, i: number) => (
+                          <div
+                            key={`${p.name}-match-${i}`}
+                            className="flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 md:flex-row md:items-center md:justify-between"
+                          >
+                            <div className="flex items-center gap-4">
+                              <span
+                                className={`rounded-lg px-3 py-1 text-sm font-bold ${
+                                  match.win
+                                    ? "bg-emerald-500/15 text-emerald-400"
+                                    : "bg-red-500/15 text-red-400"
+                                }`}
+                              >
+                                {match.win ? "WIN" : "LOSS"}
+                              </span>
+
+                              <div>
+                                <div className="font-semibold">
+                                  {match.champion}
                                 </div>
-                              </div>
-
-                              <div className="flex flex-wrap items-center gap-4 text-sm md:gap-6">
-                                <div className="font-bold text-purple-400">
-                                  {match.matchScore ?? 0} pts
-                                </div>
-
-                                <div className="text-zinc-300">
-                                  {(match.damage ?? 0).toLocaleString()} dmg
-                                </div>
-
-                                <div className="text-zinc-300">
-                                  {match.csMin} CS/min
-                                </div>
-
-                                <div className="text-zinc-500">
-                                  {formatDate(match.timestamp)}
+                                <div className="text-sm text-zinc-500">
+                                  {match.kills}/{match.deaths}/{match.assists}
                                 </div>
                               </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-500">
-                            Ingen tracked games endnu.
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm md:gap-6">
+                              <div className="font-bold text-purple-400">
+                                {match.matchScore ?? 0} pts
+                              </div>
+
+                              <div className="text-zinc-300">
+                                {(match.damage ?? 0).toLocaleString()} dmg
+                              </div>
+
+                              <div className="text-zinc-300">
+                                {match.csMin} CS/min
+                              </div>
+
+                              <div className="text-zinc-500">
+                                {formatDate(match.timestamp)}
+                              </div>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
+                        ))
+                      ) : (
+                        <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-500">
+                          Ingen tracked games endnu.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </>
       )}
