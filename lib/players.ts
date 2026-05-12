@@ -31,13 +31,7 @@ export const players = [
     mainRole: "SUPP",
     secondRole: "TOP",
   },
-  {
-    name: "Adrian",
-    gameName: "Adrianabemand",
-    tagLine: "EUW",
-    mainRole: "TOP",
-    secondRole: "MID",
-  },
+  
   {
     name: "Ivan",
     gameName: "Sylwester35",
