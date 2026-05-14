@@ -13,7 +13,7 @@ function rankValue(tier: string, rank: string, lp: number) {
     GRANDMASTER: 9000,
     MASTER: 8000,
     DIAMOND: 7000,
-    EMERALD: 6000,
+    EMERALD: 7000,
     PLATINUM: 5000,
     GOLD: 4000,
     SILVER: 3000,
@@ -104,28 +104,18 @@ function calculateStats(matches: any[], statPuuids: string[]) {
     .filter(Boolean);
 
   const games = performances.length;
-
   const wins = performances.filter((p: any) => p.win).length;
   const losses = games - wins;
   const winrate = games > 0 ? Math.round((wins / games) * 100) : 0;
 
   const kills = performances.reduce((sum: number, p: any) => sum + p.kills, 0);
-  const deaths = performances.reduce(
-    (sum: number, p: any) => sum + p.deaths,
-    0
-  );
-  const assists = performances.reduce(
-    (sum: number, p: any) => sum + p.assists,
-    0
-  );
+  const deaths = performances.reduce((sum: number, p: any) => sum + p.deaths, 0);
+  const assists = performances.reduce((sum: number, p: any) => sum + p.assists, 0);
   const damage = performances.reduce(
     (sum: number, p: any) => sum + p.totalDamageDealtToChampions,
     0
   );
-  const vision = performances.reduce(
-    (sum: number, p: any) => sum + p.visionScore,
-    0
-  );
+  const vision = performances.reduce((sum: number, p: any) => sum + p.visionScore, 0);
   const cs = performances.reduce(
     (sum: number, p: any) =>
       sum + p.totalMinionsKilled + p.neutralMinionsKilled,
@@ -204,7 +194,6 @@ function calculateStats(matches: any[], statPuuids: string[]) {
     topDeathsGame,
     pentakills,
     overallScore,
-    performances,
   };
 }
 
@@ -232,15 +221,17 @@ export async function POST() {
             statAccount.tagLine
           );
 
-          const matchIds = await getFlexMatchIds(statAccountData.puuid, 3);
+          const matchIds = await getFlexMatchIds(statAccountData.puuid, 10);
 
-          for (const id of matchIds) {
-            try {
-              await getCachedMatch(id);
-            } catch (error: any) {
-              console.log("MATCH CACHE ERROR:", id, error.message);
-            }
-          }
+          await Promise.all(
+            matchIds.map(async (id: string) => {
+              try {
+                await getCachedMatch(id);
+              } catch (error: any) {
+                console.log("MATCH CACHE ERROR:", id, error.message);
+              }
+            })
+          );
         } catch (error: any) {
           console.log(
             "CACHE WARMUP ACCOUNT ERROR:",
@@ -508,7 +499,6 @@ export async function POST() {
     data.sort((a, b) => b.score - a.score);
 
     await saveLeaderboard(data);
-
     await updateWeeklyAwardsIfNeeded(data);
 
     return NextResponse.json(data);
