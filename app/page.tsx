@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 function rankColor(tier: string) {
   const colors: Record<string, string> = {
@@ -494,16 +495,30 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col items-start gap-2 md:items-end">
-          <button
-            onClick={refreshData}
-            disabled={loading}
-            className="rounded-xl bg-emerald-500 px-5 py-3 font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
-          >
-            {loading ? "Opdaterer..." : "Opdater stats"}
-          </button>
+  <div className="flex gap-3">
+    <Link
+      href="/comps"
+      className="rounded-xl bg-zinc-800 px-5 py-3 font-bold text-zinc-200 hover:bg-zinc-700"
+    >
+      Team Comps
+    </Link>
 
-          {message && <div className="text-sm text-zinc-400">{message}</div>}
-        </div>
+    <button
+      onClick={refreshData}
+      disabled={loading}
+      className="rounded-xl bg-emerald-500 px-5 py-3 font-bold text-black hover:bg-emerald-400 disabled:opacity-50"
+    >
+      {loading ? "Opdaterer..." : "Opdater stats"}
+    </button>
+  </div>
+
+  {message && (
+    <div className="text-sm text-zinc-400">
+      {message}
+    </div>
+  )}
+</div>
+        
       </div>
 
       <div className="mb-8 flex gap-3">

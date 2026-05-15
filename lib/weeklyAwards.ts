@@ -14,7 +14,7 @@ function getCopenhagenWeekKey(date = new Date()) {
   const daysSinceFriday = (day + 2) % 7;
 
   copenhagenDate.setDate(copenhagenDate.getDate() - daysSinceFriday);
-  copenhagenDate.setHours(18, 0, 0, 0);
+  copenhagenDate.setHours(15, 0, 0, 0);
 
   if (date.getTime() < copenhagenDate.getTime()) {
     copenhagenDate.setDate(copenhagenDate.getDate() - 7);
