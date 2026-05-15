@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export async function POST() {
+export async function GET() {
   const { error } = await supabase.from("weekly_awards").upsert({
     id: "main",
     data: {
