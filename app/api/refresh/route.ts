@@ -6,6 +6,7 @@ import { getCachedMatch, getAllCachedMatches } from "@/lib/matchCache";
 import { acquireRefreshLock, releaseRefreshLock } from "@/lib/refreshLock";
 import { TRACKING_START_TIME } from "@/lib/trackerSettings";
 import { updateWeeklyAwardsIfNeeded } from "@/lib/weeklyAwards";
+import { supabase } from "@/lib/supabase";
 
 function rankValue(tier: string, rank: string, lp: number) {
   const tiers: Record<string, number> = {
@@ -38,7 +39,21 @@ function getMatchTimestamp(match: any) {
     match.info.gameCreation
   );
 }
+async function getWeeklyStartTimestamp() {
+  const { data } = await supabase
+    .from("weekly_awards")
+    .select("data")
+    .eq("id", "main")
+    .maybeSingle();
 
+  const manualResetAt = Number(data?.data?.resetAt ?? 0);
+
+  if (manualResetAt > 0) {
+    return manualResetAt;
+  }
+
+  return getLastFridayTimestamp();
+}
 function buildMatchScore(playerStats: any, gameMinutes: number, matchCs: number) {
   const matchKda =
     playerStats.deaths > 0
@@ -265,7 +280,7 @@ export async function POST() {
       }
     }
 
-    const weeklyStartTimestamp = getLastFridayTimestamp();
+    const weeklyStartTimestamp = await getWeeklyStartTimestamp();
 
     for (const player of players) {
       const oldPlayer = findOldPlayer(oldLeaderboard, player);
