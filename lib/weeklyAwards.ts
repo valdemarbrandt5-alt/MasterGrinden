@@ -14,7 +14,7 @@ function getCopenhagenWeekKey(date = new Date()) {
   const daysSinceFriday = (day + 2) % 7;
 
   copenhagenDate.setDate(copenhagenDate.getDate() - daysSinceFriday);
-  copenhagenDate.setHours(15, 0, 0, 0);
+  copenhagenDate.setHours(18, 0, 0, 0);
 
   if (date.getTime() < copenhagenDate.getTime()) {
     copenhagenDate.setDate(copenhagenDate.getDate() - 7);
@@ -34,10 +34,7 @@ function isFridayAfter18Copenhagen(date = new Date()) {
     })
   );
 
-  const day = copenhagenDate.getDay();
-  const hour = copenhagenDate.getHours();
-
-  return day === 5 && hour >= 18;
+  return copenhagenDate.getDay() === 5 && copenhagenDate.getHours() >= 18;
 }
 
 export async function readWeeklyAwards() {
@@ -57,7 +54,12 @@ export async function readWeeklyAwards() {
 
 export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
   const oldAwards = await readWeeklyAwards();
-  const weekKey = getCopenhagenWeekKey();
+
+  const resetAt = Number(oldAwards?.resetAt ?? 0);
+  const weekNumber = Number(oldAwards?.weekNumber ?? 1);
+
+  const weekKey =
+    resetAt > 0 ? `manual-week-${weekNumber}` : getCopenhagenWeekKey();
 
   const weeklyPlayers = leaderboard
     .filter((p: any) => Number(p.weekly?.games ?? 0) > 0)
@@ -78,6 +80,10 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
       topKillsGame: Number(p.weekly.topKillsGame ?? 0),
       topDeathsGame: Number(p.weekly.topDeathsGame ?? 0),
       pentakills: Number(p.weekly.pentakills ?? 0),
+      score: Number(p.score ?? 0),
+      tier: p.tier,
+      rank: p.rank,
+      lp: p.lp,
     }))
     .sort(
       (a: any, b: any) =>
@@ -106,14 +112,12 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
   }
 
   const shouldCreateNewLockedAwards =
-    isFridayAfter18Copenhagen() && oldAwards?.weekKey !== weekKey;
+    resetAt === 0 &&
+    isFridayAfter18Copenhagen() &&
+    oldAwards?.weekKey !== weekKey;
 
   const shouldKeepOldAwards =
-    oldAwards &&
-    oldAwards.weekKey === weekKey &&
-    oldAwards.overallWinner &&
-    oldAwards.improvedWinner &&
-    oldAwards.intWinner;
+    oldAwards?.overallWinner || oldAwards?.improvedWinner || oldAwards?.intWinner;
 
   let overallWinner = oldAwards?.overallWinner ?? null;
   let improvedWinner = oldAwards?.improvedWinner ?? null;
@@ -121,7 +125,8 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
 
   if (shouldCreateNewLockedAwards && eligiblePlayers.length > 0) {
     const calculatedOverallWinner = [...eligiblePlayers].sort(
-      (a, b) => Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0)
+      (a: any, b: any) =>
+        Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0)
     )[0];
 
     const oldSnapshot = oldAwards?.snapshot ?? {};
@@ -141,11 +146,13 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
         };
       })
       .sort(
-        (a, b) => Number(b.improvement ?? 0) - Number(a.improvement ?? 0)
+        (a: any, b: any) =>
+          Number(b.improvement ?? 0) - Number(a.improvement ?? 0)
       )[0];
 
     const calculatedIntWinner = [...eligiblePlayers].sort(
-      (a, b) => Number(b.topDeathsGame ?? 0) - Number(a.topDeathsGame ?? 0)
+      (a: any, b: any) =>
+        Number(b.topDeathsGame ?? 0) - Number(a.topDeathsGame ?? 0)
     )[0];
 
     overallWinner = {
@@ -169,14 +176,42 @@ export async function updateWeeklyAwardsIfNeeded(leaderboard: any[]) {
     };
   }
 
-  if (!shouldCreateNewLockedAwards && shouldKeepOldAwards) {
-    overallWinner = oldAwards.overallWinner;
-    improvedWinner = oldAwards.improvedWinner;
-    intWinner = oldAwards.intWinner;
+  if (!shouldKeepOldAwards && eligiblePlayers.length > 0) {
+    const calculatedOverallWinner = [...eligiblePlayers].sort(
+      (a: any, b: any) =>
+        Number(b.overallScore ?? 0) - Number(a.overallScore ?? 0)
+    )[0];
+
+    const calculatedIntWinner = [...eligiblePlayers].sort(
+      (a: any, b: any) =>
+        Number(b.topDeathsGame ?? 0) - Number(a.topDeathsGame ?? 0)
+    )[0];
+
+    overallWinner = {
+      name: calculatedOverallWinner.name,
+      overallScore: calculatedOverallWinner.overallScore ?? 0,
+      trackedGames: calculatedOverallWinner.trackedGames ?? 0,
+    };
+
+    improvedWinner = {
+      name: calculatedOverallWinner.name,
+      improvement: 0,
+      oldScore: 0,
+      newScore: calculatedOverallWinner.overallScore ?? 0,
+      trackedGames: calculatedOverallWinner.trackedGames ?? 0,
+    };
+
+    intWinner = {
+      name: calculatedIntWinner.name,
+      topDeathsThisWeek: calculatedIntWinner.topDeathsGame ?? 0,
+      trackedGames: calculatedIntWinner.trackedGames ?? 0,
+    };
   }
 
   const weeklyData = {
     weekKey,
+    weekNumber,
+    resetAt,
     minGamesSinceLastFriday: MIN_WEEKLY_GAMES_SINCE_LAST_FRIDAY,
     updatedAt: new Date().toISOString(),
 
