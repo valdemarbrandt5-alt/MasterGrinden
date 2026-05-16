@@ -14,7 +14,7 @@ function rankValue(tier: string, rank: string, lp: number) {
     GRANDMASTER: 9000,
     MASTER: 8000,
     DIAMOND: 7000,
-    EMERALD: 7000,
+    EMERALD: 6000,
     PLATINUM: 5000,
     GOLD: 4000,
     SILVER: 3000,
