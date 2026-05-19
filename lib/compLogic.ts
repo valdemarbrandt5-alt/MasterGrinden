@@ -1,129 +1,177 @@
-import { comps, roles, type Role } from "@/lib/comps";
+export const roles = ["top", "jungle", "mid", "bot", "support"] as const;
+export type Role = (typeof roles)[number];
 
-export type DraftState = Partial<Record<Role, string>>;
+type Comp = {
+  id: string;
+  name: string;
+  category: string;
+  priority: number;
+  roles: Record<Role, string[]>;
+};
 
-export function getCompScore(compId: string, picked: DraftState) {
-  const comp = comps.find((c) => c.id === compId);
-  if (!comp) return 0;
+const r = (
+  top: string[],
+  jungle: string[],
+  mid: string[],
+  bot: string[],
+  support: string[]
+): Record<Role, string[]> => ({ top, jungle, mid, bot, support });
 
-  let totalPicked = 0;
-  let matchingPicks = 0;
-
-  for (const role of roles) {
-    const champ = picked[role];
-    if (!champ) continue;
-
-    totalPicked++;
-
-    if (comp.roles[role].includes(champ)) {
-      matchingPicks++;
-    }
-  }
-
-  if (totalPicked === 0) return 100;
-
-  return Math.round((matchingPicks / totalPicked) * 100);
-}
-
-export function getPossibleComps(picked: DraftState) {
-  return comps
-    .map((comp) => ({
-      ...comp,
-      score: getCompScore(comp.id, picked),
-    }))
-    .filter((comp) => comp.score > 0)
-    .sort((a, b) => b.score - a.score || a.priority - b.priority);
-}
-
-export function getRecommendedPicks({
-  selectedCompId,
-  picked,
-  banned,
-}: {
-  selectedCompId: string;
-  picked: DraftState;
-  banned: string[];
-}) {
-  const selectedComp = comps.find((c) => c.id === selectedCompId);
-  if (!selectedComp) return [];
-
-  const recommendations: {
-    role: Role;
-    champion: string;
-    score: number;
-    reasons: string[];
-  }[] = [];
-
-  for (const role of roles) {
-    if (picked[role]) continue;
-
-    for (const champion of selectedComp.roles[role]) {
-      if (banned.includes(champion)) continue;
-
-      let score = 50;
-      const reasons: string[] = [];
-
-      score += 20;
-      reasons.push("Passer til valgt comp");
-
-      const simulatedDraft = {
-        ...picked,
-        [role]: champion,
-      };
-
-      const possibleComps = getPossibleComps(simulatedDraft);
-      const bestCompScore = possibleComps[0]?.score ?? 0;
-
-      score += Math.round(bestCompScore / 4);
-
-      if (bestCompScore >= 80) {
-        reasons.push("Holder draften meget clean");
-      } else if (bestCompScore >= 60) {
-        reasons.push("Holder flere comps åbne");
-      }
-
-      const pickedChampions = Object.values(picked).filter(Boolean);
-
-      if (
-        pickedChampions.some((c) =>
-          ["Malphite", "Jarvan IV", "Amumu", "Diana", "Orianna"].includes(c)
-        ) &&
-        ["Orianna", "Diana", "Samira", "Kai'Sa", "Nautilus", "Leona"].includes(
-          champion
-        )
-      ) {
-        score += 15;
-        reasons.push("God wombo synergy");
-      }
-
-      if (
-        pickedChampions.some((c) =>
-          ["Vi", "Nocturne", "Hecarim", "Diana"].includes(c)
-        ) &&
-        ["Kai'Sa", "Samira", "Lissandra", "Sylas", "Nautilus"].includes(champion)
-      ) {
-        score += 12;
-        reasons.push("God dive follow-up");
-      }
-
-      if (
-        pickedChampions.some((c) =>
-          ["Ornn", "Sion", "Sejuani", "Zac"].includes(c)
-        ) &&
-        ["Vayne", "Kai'Sa", "Tristana", "Orianna", "Azir"].includes(champion)
-      ) {
-        score += 10;
-        reasons.push("God front-to-back scaling");
-      }
-
-      recommendations.push({
-        role,
-        champion,
-        score,
-        reasons,
-      });
-    }
-  }
-
-  return recommendations.sort((a, b) => b.score - a.score);
-}
+export const comps: Comp[] = [
+  {
+    id: "front-to-back-scaling",
+    name: "Front-to-back Scaling",
+    category: "Scaling teamfight",
+    priority: 1,
+    roles: r(
+      ["Ornn", "Sion", "K'Sante", "Malphite", "Dr. Mundo"],
+      ["Sejuani", "Zac", "Maokai", "Amumu", "Skarner"],
+      ["Orianna", "Azir", "Viktor", "Hwei", "Aurelion Sol"],
+      ["Jinx", "Aphelios", "Zeri", "Kog'Maw", "Smolder"],
+      ["Lulu", "Milio", "Braum", "Janna", "Renata Glasc"]
+    ),
+  },
+  {
+    id: "hard-dive",
+    name: "Hard Dive",
+    category: "Backline access",
+    priority: 2,
+    roles: r(
+      ["Camille", "Renekton", "Jax", "Kled", "Ambessa"],
+      ["Vi", "Nocturne", "Hecarim", "Jarvan IV", "Diana"],
+      ["Lissandra", "Sylas", "Akali", "Galio", "Yone"],
+      ["Kai'Sa", "Samira", "Nilah", "Tristana", "Lucian"],
+      ["Nautilus", "Leona", "Rell", "Rakan", "Alistar"]
+    ),
+  },
+  {
+    id: "wombo-combo",
+    name: "Wombo Combo",
+    category: "AoE engage",
+    priority: 3,
+    roles: r(
+      ["Malphite", "Kennen", "Rumble", "Gnar", "Ornn"],
+      ["Amumu", "Jarvan IV", "Diana", "Wukong", "Fiddlesticks"],
+      ["Orianna", "Yasuo", "Yone", "Neeko", "Lissandra"],
+      ["Miss Fortune", "Samira", "Nilah", "Aphelios", "Kai'Sa"],
+      ["Rell", "Rakan", "Nautilus", "Leona", "Seraphine"]
+    ),
+  },
+  {
+    id: "poke-siege",
+    name: "Poke Siege",
+    category: "Long range pressure",
+    priority: 4,
+    roles: r(
+      ["Jayce", "Gangplank", "Kennen", "Gnar", "Rumble"],
+      ["Nidalee", "Graves", "Taliyah", "Karthus", "Lillia"],
+      ["Zoe", "Xerath", "Lux", "Hwei", "Jayce"],
+      ["Ezreal", "Varus", "Caitlyn", "Jhin", "Ziggs"],
+      ["Karma", "Lux", "Zyra", "Xerath", "Vel'Koz"]
+    ),
+  },
+  {
+    id: "pick-catch",
+    name: "Pick / Catch",
+    category: "Single target lockdown",
+    priority: 5,
+    roles: r(
+      ["Camille", "Renekton", "Poppy", "K'Sante", "Pantheon"],
+      ["Vi", "Lee Sin", "Elise", "Rek'Sai", "Rengar"],
+      ["Ahri", "LeBlanc", "Twisted Fate", "Syndra", "Vex"],
+      ["Ashe", "Jhin", "Varus", "Caitlyn", "Draven"],
+      ["Thresh", "Blitzcrank", "Pyke", "Bard", "Morgana"]
+    ),
+  },
+  {
+    id: "splitpush-131",
+    name: "1-3-1 Splitpush",
+    category: "Side lane pressure",
+    priority: 6,
+    roles: r(
+      ["Fiora", "Jax", "Camille", "Tryndamere", "Yorick"],
+      ["Nocturne", "Graves", "Kindred", "Kha'Zix", "Viego"],
+      ["Twisted Fate", "Ryze", "LeBlanc", "Akali", "Kassadin"],
+      ["Tristana", "Vayne", "Ezreal", "Kai'Sa", "Sivir"],
+      ["Bard", "Janna", "Karma", "Zilean", "Tahm Kench"]
+    ),
+  },
+  {
+    id: "protect-hypercarry",
+    name: "Protect Hypercarry",
+    category: "Peel / scaling ADC",
+    priority: 7,
+    roles: r(
+      ["Shen", "Ornn", "Sion", "Poppy", "Tahm Kench"],
+      ["Ivern", "Sejuani", "Zac", "Maokai", "Nunu & Willump"],
+      ["Lulu", "Orianna", "Seraphine", "Karma", "Zilean"],
+      ["Kog'Maw", "Jinx", "Aphelios", "Zeri", "Vayne"],
+      ["Lulu", "Milio", "Janna", "Braum", "Renata Glasc"]
+    ),
+  },
+  {
+    id: "early-snowball",
+    name: "Early Snowball",
+    category: "Lane dominance",
+    priority: 8,
+    roles: r(
+      ["Renekton", "Darius", "Olaf", "Pantheon", "Sett"],
+      ["Lee Sin", "Elise", "Nidalee", "Rek'Sai", "Xin Zhao"],
+      ["LeBlanc", "Talon", "Qiyana", "Akshan", "Pantheon"],
+      ["Draven", "Lucian", "Kalista", "Caitlyn", "Tristana"],
+      ["Nautilus", "Leona", "Pyke", "Blitzcrank", "Rell"]
+    ),
+  },
+  {
+    id: "skirmish-tempo",
+    name: "Skirmish Tempo",
+    category: "2v2 / 3v3 fights",
+    priority: 9,
+    roles: r(
+      ["Aatrox", "Riven", "Irelia", "Gwen", "Kled"],
+      ["Viego", "Bel'Veth", "Kindred", "Lee Sin", "Graves"],
+      ["Sylas", "Yone", "Akali", "Ekko", "Irelia"],
+      ["Kai'Sa", "Lucian", "Xayah", "Ezreal", "Kalista"],
+      ["Rakan", "Nami", "Thresh", "Bard", "Renata Glasc"]
+    ),
+  },
+  {
+    id: "double-ap",
+    name: "Double AP Threat",
+    category: "Magic damage overload",
+    priority: 10,
+    roles: r(
+      ["Gwen", "Rumble", "Kennen", "Mordekaiser", "Vladimir"],
+      ["Diana", "Lillia", "Karthus", "Fiddlesticks", "Taliyah"],
+      ["Syndra", "Viktor", "Hwei", "Orianna", "Azir"],
+      ["Varus", "Kai'Sa", "Ziggs", "Kog'Maw", "Ezreal"],
+      ["Rell", "Nautilus", "Leona", "Karma", "Seraphine"]
+    ),
+  },
+  {
+    id: "anti-dive-peel",
+    name: "Anti-Dive Peel",
+    category: "Disengage / punish engage",
+    priority: 11,
+    roles: r(
+      ["Poppy", "Gragas", "Shen", "Malphite", "K'Sante"],
+      ["Poppy", "Gragas", "Sejuani", "Ivern", "Trundle"],
+      ["Taliyah", "Vex", "Lissandra", "Galio", "Anivia"],
+      ["Xayah", "Sivir", "Ezreal", "Caitlyn", "Jinx"],
+      ["Janna", "Milio", "Braum", "Taric", "Renata Glasc"]
+    ),
+  },
+  {
+    id: "global-pick",
+    name: "Global Pick",
+    category: "Map pressure",
+    priority: 12,
+    roles: r(
+      ["Shen", "Pantheon", "Kled", "Quinn", "Gangplank"],
+      ["Nocturne", "Taliyah", "Rek'Sai", "Nunu & Willump", "Warwick"],
+      ["Twisted Fate", "Galio", "Ryze", "Pantheon", "Aurelion Sol"],
+      ["Ashe", "Jhin", "Ezreal", "Sivir", "Varus"],
+      ["Bard", "Pyke", "Rakan", "Thresh", "Zilean"]
+    ),
+  },
+];
