@@ -49,7 +49,7 @@ export const comps: TeamComp[] = [
   {
     id: "skirmish-tempo",
     name: "Skirmish Tempo",
-    color: "yellow",
+    color: "green",
     priority: 3,
     roles: {
       top: ["Aatrox", "Riven", "Irelia", "Gwen", "Kled"],
@@ -62,7 +62,7 @@ export const comps: TeamComp[] = [
   {
     id: "early-snowball",
     name: "Early Snowball",
-    color: "yellow",
+    color: "green",
     priority: 4,
     roles: {
       top: ["Renekton", "Darius", "Olaf", "Pantheon", "Sett"],
@@ -88,7 +88,7 @@ export const comps: TeamComp[] = [
   {
     id: "front-to-back-scaling",
     name: "Front-to-back Scaling",
-    color: "green",
+    color: "yellow",
     priority: 6,
     roles: {
       top: ["Ornn", "Sion", "K'Sante", "Malphite", "Dr. Mundo"],
@@ -131,7 +131,7 @@ export const comps: TeamComp[] = [
   {
     id: "anti-dive-peel",
     name: "Anti-Dive Peel",
-    color: "red",
+    color: "orange",
     priority: 9,
     roles: {
       top: ["Poppy", "Gragas", "Shen", "Malphite", "K'Sante"],
@@ -157,7 +157,7 @@ export const comps: TeamComp[] = [
   {
     id: "poke-siege",
     name: "Poke Siege",
-    color: "yellow",
+    color: "red",
     priority: 11,
     roles: {
       top: ["Jayce", "Gangplank", "Kennen", "Gnar", "Rumble"],
@@ -170,7 +170,7 @@ export const comps: TeamComp[] = [
   {
     id: "splitpush-131",
     name: "1-3-1 Splitpush",
-    color: "orange",
+    color: "red",
     priority: 12,
     roles: {
       top: ["Fiora", "Jax", "Camille", "Tryndamere", "Yorick"],
