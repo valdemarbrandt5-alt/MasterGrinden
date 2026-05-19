@@ -19,17 +19,18 @@ export const roleLabels: Record<Role, string> = {
 };
 
 export const comps: TeamComp[] = [
+  
   {
-    id: "front-to-back-scaling",
-    name: "Front-to-back Scaling",
+    id: "wombo-combo",
+    name: "Wombo Combo",
     color: "green",
-    priority: 6,
+    priority: 1,
     roles: {
-      top: ["Ornn", "Sion", "K'Sante", "Malphite", "Dr. Mundo"],
-      jungle: ["Sejuani", "Zac", "Maokai", "Amumu", "Skarner"],
-      mid: ["Orianna", "Azir", "Viktor", "Hwei", "Aurelion Sol"],
-      adc: ["Jinx", "Aphelios", "Zeri", "Kog'Maw", "Smolder"],
-      support: ["Lulu", "Milio", "Braum", "Janna", "Renata Glasc"],
+      top: ["Malphite", "Kennen", "Rumble", "Gnar", "Ornn"],
+      jungle: ["Amumu", "Jarvan IV", "Diana", "Wukong", "Fiddlesticks"],
+      mid: ["Orianna", "Yasuo", "Yone", "Neeko", "Lissandra"],
+      adc: ["Miss Fortune", "Samira", "Nilah", "Aphelios", "Kai'Sa"],
+      support: ["Rell", "Rakan", "Nautilus", "Leona", "Seraphine"],
     },
   },
   {
@@ -46,68 +47,16 @@ export const comps: TeamComp[] = [
     },
   },
   {
-    id: "wombo-combo",
-    name: "Wombo Combo",
-    color: "green",
-    priority: 1,
-    roles: {
-      top: ["Malphite", "Kennen", "Rumble", "Gnar", "Ornn"],
-      jungle: ["Amumu", "Jarvan IV", "Diana", "Wukong", "Fiddlesticks"],
-      mid: ["Orianna", "Yasuo", "Yone", "Neeko", "Lissandra"],
-      adc: ["Miss Fortune", "Samira", "Nilah", "Aphelios", "Kai'Sa"],
-      support: ["Rell", "Rakan", "Nautilus", "Leona", "Seraphine"],
-    },
-  },
-  {
-    id: "poke-siege",
-    name: "Poke Siege",
+    id: "skirmish-tempo",
+    name: "Skirmish Tempo",
     color: "yellow",
-    priority: 11,
+    priority: 3,
     roles: {
-      top: ["Jayce", "Gangplank", "Kennen", "Gnar", "Rumble"],
-      jungle: ["Nidalee", "Graves", "Taliyah", "Karthus", "Lillia"],
-      mid: ["Zoe", "Xerath", "Lux", "Hwei", "Jayce"],
-      adc: ["Ezreal", "Varus", "Caitlyn", "Jhin", "Ziggs"],
-      support: ["Karma", "Lux", "Zyra", "Xerath", "Vel'Koz"],
-    },
-  },
-  {
-    id: "pick-catch",
-    name: "Pick / Catch",
-    color: "yellow",
-    priority: 5,
-    roles: {
-      top: ["Camille", "Renekton", "Poppy", "K'Sante", "Pantheon"],
-      jungle: ["Vi", "Lee Sin", "Elise", "Rek'Sai", "Rengar"],
-      mid: ["Ahri", "LeBlanc", "Twisted Fate", "Syndra", "Vex"],
-      adc: ["Ashe", "Jhin", "Varus", "Caitlyn", "Draven"],
-      support: ["Thresh", "Blitzcrank", "Pyke", "Bard", "Morgana"],
-    },
-  },
-  {
-    id: "splitpush-131",
-    name: "1-3-1 Splitpush",
-    color: "orange",
-    priority: 12,
-    roles: {
-      top: ["Fiora", "Jax", "Camille", "Tryndamere", "Yorick"],
-      jungle: ["Nocturne", "Graves", "Kindred", "Kha'Zix", "Viego"],
-      mid: ["Twisted Fate", "Ryze", "LeBlanc", "Akali", "Kassadin"],
-      adc: ["Tristana", "Vayne", "Ezreal", "Kai'Sa", "Sivir"],
-      support: ["Bard", "Janna", "Karma", "Zilean", "Tahm Kench"],
-    },
-  },
-  {
-    id: "protect-hypercarry",
-    name: "Protect Hypercarry",
-    color: "orange",
-    priority: 7,
-    roles: {
-      top: ["Shen", "Ornn", "Sion", "Poppy", "Tahm Kench"],
-      jungle: ["Ivern", "Sejuani", "Zac", "Maokai", "Nunu & Willump"],
-      mid: ["Lulu", "Orianna", "Seraphine", "Karma", "Zilean"],
-      adc: ["Kog'Maw", "Jinx", "Aphelios", "Zeri", "Vayne"],
-      support: ["Lulu", "Milio", "Janna", "Braum", "Renata Glasc"],
+      top: ["Aatrox", "Riven", "Irelia", "Gwen", "Kled"],
+      jungle: ["Viego", "Bel'Veth", "Kindred", "Lee Sin", "Graves"],
+      mid: ["Sylas", "Yone", "Akali", "Ekko", "Irelia"],
+      adc: ["Kai'Sa", "Lucian", "Xayah", "Ezreal", "Kalista"],
+      support: ["Rakan", "Nami", "Thresh", "Bard", "Renata Glasc"],
     },
   },
   {
@@ -124,18 +73,48 @@ export const comps: TeamComp[] = [
     },
   },
   {
-    id: "skirmish-tempo",
-    name: "Skirmish Tempo",
+    id: "pick-catch",
+    name: "Pick / Catch",
     color: "yellow",
-    priority: 3,
+    priority: 5,
     roles: {
-      top: ["Aatrox", "Riven", "Irelia", "Gwen", "Kled"],
-      jungle: ["Viego", "Bel'Veth", "Kindred", "Lee Sin", "Graves"],
-      mid: ["Sylas", "Yone", "Akali", "Ekko", "Irelia"],
-      adc: ["Kai'Sa", "Lucian", "Xayah", "Ezreal", "Kalista"],
-      support: ["Rakan", "Nami", "Thresh", "Bard", "Renata Glasc"],
+      top: ["Camille", "Renekton", "Poppy", "K'Sante", "Pantheon"],
+      jungle: ["Vi", "Lee Sin", "Elise", "Rek'Sai", "Rengar"],
+      mid: ["Ahri", "LeBlanc", "Twisted Fate", "Syndra", "Vex"],
+      adc: ["Ashe", "Jhin", "Varus", "Caitlyn", "Draven"],
+      support: ["Thresh", "Blitzcrank", "Pyke", "Bard", "Morgana"],
     },
   },
+  {
+    id: "front-to-back-scaling",
+    name: "Front-to-back Scaling",
+    color: "green",
+    priority: 6,
+    roles: {
+      top: ["Ornn", "Sion", "K'Sante", "Malphite", "Dr. Mundo"],
+      jungle: ["Sejuani", "Zac", "Maokai", "Amumu", "Skarner"],
+      mid: ["Orianna", "Azir", "Viktor", "Hwei", "Aurelion Sol"],
+      adc: ["Jinx", "Aphelios", "Zeri", "Kog'Maw", "Smolder"],
+      support: ["Lulu", "Milio", "Braum", "Janna", "Renata Glasc"],
+    },
+  },
+  {
+    id: "protect-hypercarry",
+    name: "Protect Hypercarry",
+    color: "orange",
+    priority: 7,
+    roles: {
+      top: ["Shen", "Ornn", "Sion", "Poppy", "Tahm Kench"],
+      jungle: ["Ivern", "Sejuani", "Zac", "Maokai", "Nunu & Willump"],
+      mid: ["Lulu", "Orianna", "Seraphine", "Karma", "Zilean"],
+      adc: ["Kog'Maw", "Jinx", "Aphelios", "Zeri", "Vayne"],
+      support: ["Lulu", "Milio", "Janna", "Braum", "Renata Glasc"],
+    },
+  },
+  
+  
+  
+  
   {
     id: "double-ap",
     name: "Double AP Threat",
@@ -173,6 +152,32 @@ export const comps: TeamComp[] = [
       mid: ["Twisted Fate", "Galio", "Ryze", "Pantheon", "Aurelion Sol"],
       adc: ["Ashe", "Jhin", "Ezreal", "Sivir", "Varus"],
       support: ["Bard", "Pyke", "Rakan", "Thresh", "Zilean"],
+    },
+  },
+  {
+    id: "poke-siege",
+    name: "Poke Siege",
+    color: "yellow",
+    priority: 11,
+    roles: {
+      top: ["Jayce", "Gangplank", "Kennen", "Gnar", "Rumble"],
+      jungle: ["Nidalee", "Graves", "Taliyah", "Karthus", "Lillia"],
+      mid: ["Zoe", "Xerath", "Lux", "Hwei", "Jayce"],
+      adc: ["Ezreal", "Varus", "Caitlyn", "Jhin", "Ziggs"],
+      support: ["Karma", "Lux", "Zyra", "Xerath", "Vel'Koz"],
+    },
+  },
+  {
+    id: "splitpush-131",
+    name: "1-3-1 Splitpush",
+    color: "orange",
+    priority: 12,
+    roles: {
+      top: ["Fiora", "Jax", "Camille", "Tryndamere", "Yorick"],
+      jungle: ["Nocturne", "Graves", "Kindred", "Kha'Zix", "Viego"],
+      mid: ["Twisted Fate", "Ryze", "LeBlanc", "Akali", "Kassadin"],
+      adc: ["Tristana", "Vayne", "Ezreal", "Kai'Sa", "Sivir"],
+      support: ["Bard", "Janna", "Karma", "Zilean", "Tahm Kench"],
     },
   },
 ];
