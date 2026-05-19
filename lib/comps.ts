@@ -23,7 +23,7 @@ export const comps: TeamComp[] = [
     id: "front-to-back-scaling",
     name: "Front-to-back Scaling",
     color: "green",
-    priority: 1,
+    priority: 6,
     roles: {
       top: ["Ornn", "Sion", "K'Sante", "Malphite", "Dr. Mundo"],
       jungle: ["Sejuani", "Zac", "Maokai", "Amumu", "Skarner"],
@@ -49,7 +49,7 @@ export const comps: TeamComp[] = [
     id: "wombo-combo",
     name: "Wombo Combo",
     color: "green",
-    priority: 3,
+    priority: 1,
     roles: {
       top: ["Malphite", "Kennen", "Rumble", "Gnar", "Ornn"],
       jungle: ["Amumu", "Jarvan IV", "Diana", "Wukong", "Fiddlesticks"],
@@ -62,7 +62,7 @@ export const comps: TeamComp[] = [
     id: "poke-siege",
     name: "Poke Siege",
     color: "yellow",
-    priority: 4,
+    priority: 11,
     roles: {
       top: ["Jayce", "Gangplank", "Kennen", "Gnar", "Rumble"],
       jungle: ["Nidalee", "Graves", "Taliyah", "Karthus", "Lillia"],
@@ -88,7 +88,7 @@ export const comps: TeamComp[] = [
     id: "splitpush-131",
     name: "1-3-1 Splitpush",
     color: "orange",
-    priority: 6,
+    priority: 12,
     roles: {
       top: ["Fiora", "Jax", "Camille", "Tryndamere", "Yorick"],
       jungle: ["Nocturne", "Graves", "Kindred", "Kha'Zix", "Viego"],
@@ -114,7 +114,7 @@ export const comps: TeamComp[] = [
     id: "early-snowball",
     name: "Early Snowball",
     color: "yellow",
-    priority: 8,
+    priority: 4,
     roles: {
       top: ["Renekton", "Darius", "Olaf", "Pantheon", "Sett"],
       jungle: ["Lee Sin", "Elise", "Nidalee", "Rek'Sai", "Xin Zhao"],
@@ -127,7 +127,7 @@ export const comps: TeamComp[] = [
     id: "skirmish-tempo",
     name: "Skirmish Tempo",
     color: "yellow",
-    priority: 9,
+    priority: 3,
     roles: {
       top: ["Aatrox", "Riven", "Irelia", "Gwen", "Kled"],
       jungle: ["Viego", "Bel'Veth", "Kindred", "Lee Sin", "Graves"],
@@ -140,7 +140,7 @@ export const comps: TeamComp[] = [
     id: "double-ap",
     name: "Double AP Threat",
     color: "orange",
-    priority: 10,
+    priority: 8,
     roles: {
       top: ["Gwen", "Rumble", "Kennen", "Mordekaiser", "Vladimir"],
       jungle: ["Diana", "Lillia", "Karthus", "Fiddlesticks", "Taliyah"],
@@ -153,7 +153,7 @@ export const comps: TeamComp[] = [
     id: "anti-dive-peel",
     name: "Anti-Dive Peel",
     color: "red",
-    priority: 11,
+    priority: 9,
     roles: {
       top: ["Poppy", "Gragas", "Shen", "Malphite", "K'Sante"],
       jungle: ["Poppy", "Gragas", "Sejuani", "Ivern", "Trundle"],
@@ -166,7 +166,7 @@ export const comps: TeamComp[] = [
     id: "global-pick",
     name: "Global Pick",
     color: "orange",
-    priority: 12,
+    priority: 10,
     roles: {
       top: ["Shen", "Pantheon", "Kled", "Quinn", "Gangplank"],
       jungle: ["Nocturne", "Taliyah", "Rek'Sai", "Nunu & Willump", "Warwick"],
