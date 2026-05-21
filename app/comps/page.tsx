@@ -14,7 +14,7 @@ const colorClasses = {
 };
 
 export default function CompsPage() {
-  const [selectedCompId, setSelectedCompId] = useState(comps[0].id);
+  const [selectedCompId, setSelectedCompId] = useState("no-comp");
   const [selectedRole, setSelectedRole] = useState<Role>("top");
   const [picked, setPicked] = useState<Partial<Record<Role, string>>>({});
   const [banned, setBanned] = useState<string[]>([]);
