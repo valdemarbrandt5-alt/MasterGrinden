@@ -7,7 +7,7 @@ export type TeamComp = {
   priority: number;
   roles: Record<Role, string[]>;
 };
-
+//s
 export const roles: Role[] = ["top", "jungle", "mid", "adc", "support"];
 
 export const roleLabels: Record<Role, string> = {
