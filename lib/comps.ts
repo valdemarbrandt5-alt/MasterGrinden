@@ -18,70 +18,72 @@ export const roleLabels: Record<Role, string> = {
   support: "Support",
 };
 
+const allRoleChamps: Record<Role, string[]> = {
+  top: ["Malphite", "Ornn", "Sion", "Shen", "Volibear"],
+  jungle: ["Amumu", "Diana", "Udyr", "Volibear", "Zac"],
+  mid: ["Lissandra", "Veigar", "Galio", "Fizz", "Xerath"],
+  adc: ["Vayne", "Samira", "Draven", "Kai'Sa", "Lucian"],
+  support: ["Nautilus", "Pantheon", "Vel'Koz", "Amumu", "Leona"],
+};
+
 export const comps: TeamComp[] = [
   {
     id: "no-comp",
     name: "Ingen comp",
     color: "red",
     priority: 0,
-    roles: {
-      top: [],
-      jungle: [],
-      mid: [],
-      adc: [],
-      support: [],
-    },
+    roles: allRoleChamps,
   },
   {
-    id: "malphite-amumu-samira-wombo",
-    name: "Malphite / Amumu / Samira Wombo",
+    id: "wombo-engage",
+    name: "Wombo Engage",
     color: "green",
     priority: 1,
     roles: {
-      top: ["Malphite", "Zac", "Volibear", "Ornn"],
-      jungle: ["Amumu", "Diana", "Volibear", "Udyr"],
-      mid: ["Lissandra", "Orianna", "Veigar", "Fizz"],
-      adc: ["Samira", "Kai'Sa", "Vayne", "Lucian"],
-      support: ["Nautilus", "Pantheon", "Amumu", "Vel'Koz"],
+      top: ["Malphite", "Ornn", "Sion", "Shen", "Volibear"],
+      jungle: ["Amumu", "Diana", "Zac", "Volibear", "Udyr"],
+      mid: ["Lissandra", "Galio", "Veigar", "Fizz", "Xerath"],
+      adc: ["Samira", "Kai'Sa", "Vayne", "Lucian", "Draven"],
+      support: ["Nautilus", "Amumu", "Leona", "Pantheon", "Vel'Koz"],
     },
   },
   {
-    id: "dive-bot-carry",
-    name: "Dive Bot Carry",
+    id: "dive-bot",
+    name: "Dive Bot",
     color: "green",
     priority: 2,
     roles: {
-      top: ["Malphite", "Zac", "Volibear", "Viego"],
-      jungle: ["Diana", "Amumu", "Udyr", "Volibear"],
-      mid: ["Lissandra", "Fizz", "Ekko", "Veigar"],
-      adc: ["Kai'Sa", "Samira", "Lucian", "Tristana"],
-      support: ["Nautilus", "Pantheon", "Amumu"],
+      top: ["Malphite", "Shen", "Volibear", "Ornn", "Sion"],
+      jungle: ["Diana", "Amumu", "Zac", "Volibear", "Udyr"],
+      mid: ["Lissandra", "Galio", "Fizz", "Veigar", "Xerath"],
+      adc: ["Kai'Sa", "Samira", "Lucian", "Vayne", "Draven"],
+      support: ["Nautilus", "Leona", "Pantheon", "Amumu", "Vel'Koz"],
     },
   },
   {
-    id: "protect-adc",
-    name: "Protect ADC",
+    id: "protect-carry",
+    name: "Protect Carry",
     color: "orange",
     priority: 3,
     roles: {
-      top: ["Malphite", "Ornn", "Zac", "Volibear"],
-      jungle: ["Amumu", "Volibear", "Udyr", "Zac"],
-      mid: ["Veigar", "Lissandra", "Orianna", "Xerath"],
-      adc: ["Vayne", "Kai'Sa", "Tristana", "Aphelios"],
-      support: ["Nautilus", "Amumu", "Vel'Koz", "Pantheon"],
+      top: ["Ornn", "Sion", "Shen", "Malphite", "Volibear"],
+      jungle: ["Amumu", "Zac", "Udyr", "Volibear", "Diana"],
+      mid: ["Veigar", "Galio", "Lissandra", "Xerath", "Fizz"],
+      adc: ["Vayne", "Kai'Sa", "Lucian", "Samira", "Draven"],
+      support: ["Nautilus", "Leona", "Amumu", "Pantheon", "Vel'Koz"],
     },
   },
   {
-    id: "draven-snowball",
-    name: "Draven Snowball",
+    id: "snowball-fight",
+    name: "Snowball Fight",
     color: "yellow",
     priority: 4,
     roles: {
-      top: ["Malphite", "Volibear", "Zac", "Katarina"],
-      jungle: ["Udyr", "Volibear", "Amumu", "Diana"],
-      mid: ["Lissandra", "Fizz", "Veigar", "Ekko"],
-      adc: ["Draven", "Lucian", "Samira", "Kai'Sa"],
-      support: ["Nautilus", "Pantheon", "Amumu"],
+      top: ["Volibear", "Malphite", "Shen", "Ornn", "Sion"],
+      jungle: ["Udyr", "Volibear", "Diana", "Amumu", "Zac"],
+      mid: ["Fizz", "Lissandra", "Galio", "Veigar", "Xerath"],
+      adc: ["Draven", "Lucian", "Samira", "Kai'Sa", "Vayne"],
+      support: ["Pantheon", "Nautilus", "Leona", "Amumu", "Vel'Koz"],
     },
   },
   {
@@ -90,37 +92,37 @@ export const comps: TeamComp[] = [
     color: "yellow",
     priority: 5,
     roles: {
-      top: ["Malphite", "Zac", "Volibear", "Ornn"],
-      jungle: ["Udyr", "Volibear", "Diana", "Amumu"],
-      mid: ["Lissandra", "Veigar", "Fizz", "Xerath"],
-      adc: ["Ashe", "Draven", "Vayne", "Kai'Sa"],
-      support: ["Pantheon", "Nautilus", "Amumu", "Vel'Koz"],
+      top: ["Malphite", "Shen", "Ornn", "Sion", "Volibear"],
+      jungle: ["Udyr", "Volibear", "Diana", "Amumu", "Zac"],
+      mid: ["Lissandra", "Veigar", "Galio", "Fizz", "Xerath"],
+      adc: ["Ashe", "Draven", "Kai'Sa", "Lucian", "Vayne"],
+      support: ["Pantheon", "Nautilus", "Leona", "Amumu", "Vel'Koz"],
     },
   },
   {
-    id: "poke-velkoz",
-    name: "Vel'Koz Poke",
+    id: "poke-catch",
+    name: "Poke / Catch",
     color: "orange",
     priority: 6,
     roles: {
-      top: ["Malphite", "Ornn", "Zac", "Volibear"],
-      jungle: ["Udyr", "Amumu", "Volibear", "Diana"],
-      mid: ["Xerath", "Veigar", "Ezreal", "Lissandra"],
-      adc: ["Ashe", "Vayne", "Aphelios", "Kai'Sa"],
-      support: ["Vel'Koz", "Pantheon", "Nautilus"],
+      top: ["Ornn", "Sion", "Malphite", "Shen", "Volibear"],
+      jungle: ["Udyr", "Amumu", "Zac", "Volibear", "Diana"],
+      mid: ["Xerath", "Veigar", "Galio", "Lissandra", "Fizz"],
+      adc: ["Ashe", "Kai'Sa", "Lucian", "Vayne", "Draven"],
+      support: ["Vel'Koz", "Pantheon", "Nautilus", "Leona", "Amumu"],
     },
   },
   {
-    id: "chaos-reset",
-    name: "Chaos / Reset Fight",
-    color: "green",
+    id: "front-to-back",
+    name: "Front to Back",
+    color: "orange",
     priority: 7,
     roles: {
-      top: ["Viego", "Katarina", "Malphite", "Zac"],
-      jungle: ["Diana", "Amumu", "Udyr", "Volibear"],
-      mid: ["Fizz", "Ekko", "Lissandra", "Veigar"],
-      adc: ["Samira", "Kai'Sa", "Draven", "Yunara"],
-      support: ["Nautilus", "Pantheon", "Amumu"],
+      top: ["Ornn", "Sion", "Malphite", "Shen", "Volibear"],
+      jungle: ["Zac", "Amumu", "Udyr", "Volibear", "Diana"],
+      mid: ["Veigar", "Galio", "Lissandra", "Xerath", "Fizz"],
+      adc: ["Vayne", "Kai'Sa", "Lucian", "Samira", "Draven"],
+      support: ["Nautilus", "Leona", "Amumu", "Pantheon", "Vel'Koz"],
     },
   },
 ];
@@ -133,7 +135,9 @@ export function getCompsForChampion(champion: string) {
 
 export function getChampionsForCompAndRole(compId: string, role: Role) {
   const comp = comps.find((c) => c.id === compId);
+
   if (!comp) return [];
+
   return comp.roles[role];
 }
 
