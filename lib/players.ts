@@ -6,6 +6,7 @@ export const players = [
   statAccounts: [
     { gameName: "Brandtenz", tagLine: "3700" },
     { gameName: "Ivan Er Chopped", tagLine: "2300" },
+    { gameName: "Brandtenz", tagLine: "2003" },
   ],
   mainRole: "ADC",
   secondRole: "MID",
