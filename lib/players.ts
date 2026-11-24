@@ -40,16 +40,16 @@ export const players = [
     secondRole: "TOP",
   },
   {
-    name: "David",
-    gameName: "doxxu",
-    tagLine: "035",
-    statAccounts: [
+  name: "David",
+  gameName: "doxxu",
+  tagLine: "035",
+  statAccounts: [
+    { gameName: "doxxu", tagLine: "035" },
     { gameName: "Pipfugl", tagLine: "EUW" },
-    
   ],
-    mainRole: "TOP",
-    secondRole: "JNGL",
-  },
+  mainRole: "TOP",
+  secondRole: "JNGL",
+},
   {
     name: "Martin",
     gameName: "Machi",
